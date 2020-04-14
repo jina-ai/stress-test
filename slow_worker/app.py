@@ -5,8 +5,6 @@ from jina.enums import SchedulerType
 from jina.executors.crafters import BaseDocCrafter
 from jina.flow import Flow
 
-from slow_worker import random_docs
-
 
 class SlowWorker(BaseDocCrafter):
 
@@ -23,8 +21,13 @@ class SlowWorker(BaseDocCrafter):
         return {'doc_id': doc_id}
 
 
-f = Flow(runtime='process').add(name='sw', yaml_path='SlowWorker', replicas=20,
-                                scheduling=SchedulerType.LOAD_BALANCE).build()
+if __name__ == '__main__':
+    from slow_worker import random_docs
 
-with f:
-    f.index(raw_bytes=random_docs(10000), in_proto=True, batch_size=10)
+    f = Flow(runtime='process', logserver=True, logserver_config='test-server-config.yml').add(name='sw',
+                                                                                               yaml_path='SlowWorker',
+                                                                                               replicas=20,
+                                                                                               scheduling=SchedulerType.LOAD_BALANCE).build()
+
+    with f:
+        f.index(raw_bytes=random_docs(1000), in_proto=True, batch_size=10)

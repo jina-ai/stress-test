@@ -1,0 +1,10 @@
+!Flow
+with:
+  runtime: process
+  logserver: True
+  logserver_config: test-server-config.yml
+pods:
+  sw:
+    yaml_path: SlowWorker
+    replicas: 5
+    py_modules: app.py
