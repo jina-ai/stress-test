@@ -20,4 +20,4 @@ To test `--prefetch` and `--prefetch-size`
 
 To test `JINA_ARRAY_QUANT` unset, `fp16` and `uint8`
 
-[io_bound](io_bound/app.py)
+[quant](quant/app.py)
