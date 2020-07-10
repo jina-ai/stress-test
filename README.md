@@ -21,3 +21,8 @@ To test `--prefetch` and `--prefetch-size`
 To test `JINA_ARRAY_QUANT` unset, `fp16` and `uint8`
 
 [quant](quant/app.py)
+
+## Case 4: Vector indexers 
+
+[vector_indexers](vector_index/app.py)
+
