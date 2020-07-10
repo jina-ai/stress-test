@@ -1,6 +1,7 @@
 import click
-import os
+import json
 import numpy as np
+import os
 
 from jina.executors import BaseExecutor
 
@@ -17,6 +18,17 @@ FAISS_DATA_DIR = os.path.join(os.path.join(os.path.dirname(__file__), "faiss_dat
 INDEX_FEED_PATH = os.path.join(FAISS_DATA_DIR, "sift_base.fvecs")
 QUERY_FEED_PATH = os.path.join(FAISS_DATA_DIR, "sift_query.fvecs")
 GROUNDTRUTH_PATH = os.path.join(FAISS_DATA_DIR, 'sift_groundtruth.ivecs')
+
+INDEX_TYPE = 'index_type'
+PARAMS = 'params'
+INDEX_TIME_S = 'index_time'
+INDEX_DOCS = 'index_docs'
+INDEX_DOCS_S = 'index_docs_s'
+BUILD_TIME_S = 'build_time'
+QUERY_TIME = 'query_time'
+QUERY_DOCS = 'query_docs'
+QUERY_DOCS_S = 'query_docs_s'
+RECALL = 'recall@1,10,20,50,100'
 
 
 def read_data(db_file_path: str, batch_size: int, max_docs: int = None):
@@ -36,39 +48,50 @@ def read_data(db_file_path: str, batch_size: int, max_docs: int = None):
         yield keys, vectors[start_batch: end_batch]
 
 
-def do_index(indexer: 'BaseNumpyIndexer', batch_size: int):
+def do_index(indexer: 'BaseNumpyIndexer', batch_size: int, stat: dict):
     t = PerfTimer()
     with t:
         n = 0
         for keys, vecs in read_data(INDEX_FEED_PATH, batch_size):
             indexer.add(keys, vecs)
             n += batch_size
+    stat[INDEX_TIME_S] = t.interval
+    stat[INDEX_DOCS] = n
+    stat[INDEX_DOCS_S] = n / t.interval
     print(f'Took {t.interval} seconds to index {n} documents: {n / t.interval} doc/s')
 
 
-def do_warmup(indexer: 'BaseNumpyIndexer'):
+def do_warmup(indexer: 'BaseNumpyIndexer', stat: dict):
     t = PerfTimer()
     with t:
         for keys, vecs in read_data(QUERY_FEED_PATH, batch_size=1, max_docs=100):
             indexer.query(vecs, 1)
+    stat[BUILD_TIME_S] = t.interval
     print(f'Took {t.interval} seconds to train and warmup the index')
 
 
-def do_query(indexer: 'BaseNumpyIndexer', batch_size: int, top_k: int):
+def do_query(indexer: 'BaseNumpyIndexer', batch_size: int, top_k: int, stat: dict):
     results = np.empty((0, top_k), 'float32')
     t = PerfTimer()
     with t:
         n = 0
         for keys, vecs in read_data(QUERY_FEED_PATH, batch_size):
             doc_ids, dists = indexer.query(vecs, top_k)
-            results = np.vstack((results, doc_ids))
+            if doc_ids.shape != (keys.shape[0],):
+                results = np.vstack((results, doc_ids))
             n += batch_size
+    stat[QUERY_TIME] = t.interval
+    stat[QUERY_DOCS] = n
+    stat[QUERY_DOCS_S] = n / t.interval
     print(f'Took {t.interval} seconds to query {n} documents: {n / t.interval} doc/s')
     return results
 
 
-def do_evaluate(results: np.array):
+def do_evaluate(results: np.array, stat: dict):
     groundtruth = ivecs_read(GROUNDTRUTH_PATH)
+    if results.shape[0] < groundtruth.shape[0]:
+        add_negative = np.full((groundtruth.shape[0] - results.shape[0], results.shape[1]), -1)
+        results = np.vstack((results, add_negative))
 
     def recall_at_k(k):
         """
@@ -79,7 +102,9 @@ def do_evaluate(results: np.array):
         return eval
 
     for eval_point in [1, 10, 20, 50, 100]:
-        print(f'recall@{eval_point} = {recall_at_k(eval_point)}')
+        result_evaluation = recall_at_k(eval_point)
+        stat[RECALL].append(result_evaluation)
+        print(f'recall@{eval_point} = {result_evaluation}')
 
 
 def get_indexer(index_type, params):
@@ -106,6 +131,18 @@ def load_indexer(abs_path):
 def run(batch_size, top_k, file_path, index, warmup, query, evaluate):
     print(f'Testing from file {file_path}')
     for index_type, params in load_experiment(file_path):
+        stat = {
+            INDEX_TYPE: index_type,
+            PARAMS: params,
+            INDEX_TIME_S: 0,
+            INDEX_DOCS: 0,
+            INDEX_DOCS_S: 0,
+            BUILD_TIME_S: 0,
+            QUERY_TIME: 0,
+            QUERY_DOCS: 0,
+            QUERY_DOCS_S: 0,
+            RECALL: []
+        }
         print(f'Testing for index {index_type} with params {params}')
         params_str = str(params).encode('utf-8').hex()
         index_str = f'{index_type}-{params_str}'
@@ -113,16 +150,18 @@ def run(batch_size, top_k, file_path, index, warmup, query, evaluate):
         params['name'] = index_str
         with get_indexer(index_type, params) as idx:
             if index:
-                do_index(idx, batch_size)
+                do_index(idx, batch_size, stat)
                 idx.save(save_path)
 
         with load_indexer(save_path) as idx:
             if warmup:
-                do_warmup(idx)
+                do_warmup(idx, stat)
             if query:
-                results = do_query(idx, batch_size, top_k)
+                results = do_query(idx, batch_size, top_k, stat)
                 if evaluate:
-                    do_evaluate(results)
+                    do_evaluate(results, stat)
+        with open('results.json', 'a') as f:
+            json.dump(stat, f)
 
 
 if __name__ == '__main__':
