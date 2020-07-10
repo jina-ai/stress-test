@@ -1,10 +1,13 @@
 import click
 import os
 import numpy as np
+
 from jina.executors import BaseExecutor
-from jina.executors.indexers.vector.faiss import FaissIndexer
-from jina.executors.indexers.vector.annoy import AnnoyIndexer
-from jina.executors.indexers.vector.numpy import NumpyIndexer
+
+from annoy_indexer import get_annoy_indexer
+from faiss_indexer import get_faiss_indexer
+from numpy_indexer import get_numpy_indexer
+from load_experiment import load_experiment
 from read_vectors_files import fvecs_read, ivecs_read
 from perf_timer import PerfTimer
 
@@ -14,9 +17,6 @@ FAISS_DATA_DIR = os.path.join(os.path.join(os.path.dirname(__file__), "faiss_dat
 INDEX_FEED_PATH = os.path.join(FAISS_DATA_DIR, "sift_base.fvecs")
 QUERY_FEED_PATH = os.path.join(FAISS_DATA_DIR, "sift_query.fvecs")
 GROUNDTRUTH_PATH = os.path.join(FAISS_DATA_DIR, 'sift_groundtruth.ivecs')
-FAISS_INDEXER_BIN_SAVE_PATH = os.path.join(WORKSPACE_DIR, "faiss-indexer.bin")
-ANNOY_INDEXER_BIN_SAVE_PATH = os.path.join(WORKSPACE_DIR, "annoy-indexer.bin")
-NUMPY_INDEXER_BIN_SAVE_PATH = os.path.join(WORKSPACE_DIR, "numpy-indexer.bin")
 
 
 def read_data(db_file_path: str, batch_size: int, max_docs: int = None):
@@ -82,89 +82,48 @@ def do_evaluate(results: np.array):
         print(f'recall@{eval_point} = {recall_at_k(eval_point)}')
 
 
-def get_faiss_indexer(save_abspath: str = None):
-    if save_abspath is None or os.path.exists(save_abspath) is False:
-        return FaissIndexer(index_key='IVF4096,PQ64', train_filepath=os.path.join(WORKSPACE_DIR, "train.tgz"),
-                            index_filename="faiss-index.tgz", compress_level=1,
-                            metas={'workspace': WORKSPACE_DIR,
-                                   'warn_unnamed': False,
-                                   'separated_workspace': False,
-                                   'is_trained': False,
-                                   'max_snapshot': 0,
-                                   'on_gpu': False
-                                   })
-    else:
-        return BaseExecutor.load(save_abspath)
-
-
-def get_annoy_indexer(save_abspath: str = None):
-    if save_abspath is None or os.path.exists(save_abspath) is False:
-        return AnnoyIndexer(metric='euclidean', ntrees=10,
-                            index_filename="annoy-index.tgz", compress_level=1,
-                            metas={'workspace': WORKSPACE_DIR,
-                                   'warn_unnamed': False,
-                                   'separated_workspace': False,
-                                   'is_trained': False,
-                                   'max_snapshot': 0
-                                   })
-    else:
-        return BaseExecutor.load(save_abspath)
-
-
-def get_numpy_indexer(save_abspath: str = None):
-    if save_abspath is None or os.path.exists(save_abspath) is False:
-        return NumpyIndexer(index_filename="numpy-index.tgz", compress_level=1,
-                            metas={'workspace': WORKSPACE_DIR,
-                                   'warn_unnamed': False,
-                                   'separated_workspace': False,
-                                   'is_trained': False,
-                                   'max_snapshot': 0
-                                   })
-    else:
-        return BaseExecutor.load(save_abspath)
-
-
-def get_indexer(index_type: str = 'faiss'):
+def get_indexer(index_type, params):
     if index_type == 'faiss':
-        return get_faiss_indexer(FAISS_INDEXER_BIN_SAVE_PATH)
+        return get_faiss_indexer(params)
     elif index_type == 'annoy':
-        return get_annoy_indexer(ANNOY_INDEXER_BIN_SAVE_PATH)
+        return get_annoy_indexer(params)
     elif index_type == 'numpy':
-        return get_numpy_indexer(NUMPY_INDEXER_BIN_SAVE_PATH)
+        return get_numpy_indexer(params)
 
 
-def save_indexer(indexer: 'BaseNumpyIndexer', index_type: str = 'faiss'):
-    if index_type == 'faiss':
-        indexer.save(FAISS_INDEXER_BIN_SAVE_PATH)
-    elif index_type == 'annoy':
-        indexer.save(ANNOY_INDEXER_BIN_SAVE_PATH)
-    elif index_type == 'numpy':
-        indexer.save(NUMPY_INDEXER_BIN_SAVE_PATH)
+def load_indexer(abs_path):
+    return BaseExecutor.load(abs_path)
 
 
 @click.command()
 @click.option('--batch_size', '-n', default=50)
 @click.option('--top_k', '-k', default=100)
-@click.option('--index_type', '-t', default='faiss')
-@click.option('--index', '-i', default=False, type=bool)
-@click.option('--warmup', '-w', default=False, type=bool)
-@click.option('--query', '-q', default=False, type=bool)
-@click.option('--evaluate', '-e', default=False, type=bool)
-def main(batch_size, top_k, index_type, index, warmup, query, evaluate):
-    print(f'Testing for index {index_type}')
-    with get_indexer(index_type) as idx:
-        if index:
-            do_index(idx, batch_size)
-            save_indexer(idx, index_type)
+@click.option('--file_path', '-f', type=str, default='experiments.yaml')
+@click.option('--index', '-i', is_flag=True)
+@click.option('--warmup', '-w', is_flag=True)
+@click.option('--query', '-q', is_flag=True)
+@click.option('--evaluate', '-e', is_flag=True)
+def run(batch_size, top_k, file_path, index, warmup, query, evaluate):
+    print(f'Testing from file {file_path}')
+    for index_type, params in load_experiment(file_path):
+        print(f'Testing for index {index_type} with params {params}')
+        params_str = str(params).encode('utf-8').hex()
+        index_str = f'{index_type}-{params_str}'
+        save_path = os.path.join(WORKSPACE_DIR, f"{index_str}.bin")
+        params['name'] = index_str
+        with get_indexer(index_type, params) as idx:
+            if index:
+                do_index(idx, batch_size)
+                idx.save(save_path)
 
-    with get_indexer(index_type) as idx:
-        if warmup:
-            do_warmup(idx)
-        if query:
-            results = do_query(idx, batch_size, top_k)
-            if evaluate:
-                do_evaluate(results)
+        with load_indexer(save_path) as idx:
+            if warmup:
+                do_warmup(idx)
+            if query:
+                results = do_query(idx, batch_size, top_k)
+                if evaluate:
+                    do_evaluate(results)
 
 
 if __name__ == '__main__':
-    main()
+    run()
