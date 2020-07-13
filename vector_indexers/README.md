@@ -6,6 +6,12 @@ integrated by Jina.
 The dataset used in the experiments is the SIFT1M, widely used in ANN benchmarking. It can be obtained in http://corpus-texmex.irisa.fr/
 The design of this stress test is inspired by https://github.com/erikbern/ann-benchmarks 
 
+In order to prepare the data to execute the experiments just run the command:
+
+```shell script
+./get_sift.sh
+```
+
 The experiment set is passed to the application through a yaml file that describes the experiments as a set of
 indexes types combines with a set of parameter value ranges. All the combinations of parameters described in the yaml file
 will be used. 
@@ -26,6 +32,20 @@ experiments:
 
 The command to launch the experiments is:
 
+Note that the results will be appended to `results.json`
+
 ```
 python app.py -n 1000 -i -w -q -e -f experiments.yaml
 ```
+
+The arguments it accepts are:
+
+- batch_size (-n): The batch size that will be passed to the indexer
+- top_k (-k): The number of similar vectors it will ask the indexer for
+- file_path (-f): Yaml file describing the experiment or set of experiments to run
+- index command (-i): Force the experiment to run the indexing part of experiment
+- warmup command (-w): Force the experiment to run the build and warmup command appart from query. Useful to measure querying type independently.
+- query command (-q): Force to run the queries
+- evaluate command(-e): Force the evaluation.
+
+Important to notice that for -w , -q, and -e to work, an index command must have been done, and the indexer binaries and vector files must still be in the `workspace` folder

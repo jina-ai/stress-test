@@ -24,5 +24,5 @@ To test `JINA_ARRAY_QUANT` unset, `fp16` and `uint8`
 
 ## Case 4: Vector indexers 
 
-[vector_indexers](vector_index/app.py)
+[vector_indexers](vector_indexers/app.py)
 
