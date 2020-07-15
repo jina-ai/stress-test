@@ -1,0 +1,4 @@
+experiments:
+  faiss:
+    n_list: [4096]
+    n_probes: [1]
