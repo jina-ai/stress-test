@@ -160,7 +160,7 @@ def run(batch_size, top_k, file_path, index, warmup, query, evaluate):
                 results = do_query(idx, batch_size, top_k, stat)
                 if evaluate:
                     do_evaluate(results, stat)
-        with open('results.json', 'a') as f:
+        with open('results2.json', 'a') as f:
             json.dump(stat, f)
 
 
