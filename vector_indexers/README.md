@@ -49,3 +49,18 @@ The arguments it accepts are:
 - evaluate command(-e): Force the evaluation.
 
 Important to notice that for -w , -q, and -e to work, an index command must have been done, and the indexer binaries and vector files must still be in the `workspace` folder
+
+###Visualization
+
+To see the visualization run 
+```
+python plot.py
+```
+
+This will use the `results.json` and plot a graph
+
+####Example
+
+This is how the data for Faiss looks like
+
+![alt text](Figure_1.png "Faiss data recall and query time")
