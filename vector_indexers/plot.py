@@ -15,8 +15,6 @@ def create_plot():
         result_details['recall@1,10,20,50,100'] = item['recall@1,10,20,50,100']
         result_list.append(result_details)
 
-    print(result_list)
-
     result_list_dataframe = pd.DataFrame(result_list)
     dfg = result_list_dataframe.groupby('query_time').count()
 
