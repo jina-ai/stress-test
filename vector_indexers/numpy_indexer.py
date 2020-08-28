@@ -1,6 +1,6 @@
 import os
 
-from jina.executors.indexers.vector.numpy import NumpyIndexer
+from jina.hub.indexers.vector.NumpyIndexer import NumpyIndexer
 
 WORKSPACE_DIR = os.path.join(os.path.dirname(__file__), "workspace")
 

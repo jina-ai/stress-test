@@ -1,7 +1,6 @@
 import os
 
-from jina.executors.indexers.vector.faiss import FaissIndexer
-
+from jina.hub.indexers.vector.FaissIndexer import FaissIndexer
 WORKSPACE_DIR = os.path.join(os.path.dirname(__file__), "workspace")
 
 

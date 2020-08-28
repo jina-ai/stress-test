@@ -1,6 +1,6 @@
 import os
 
-from jina.executors.indexers.vector.annoy import AnnoyIndexer
+from jina.hub.indexers.vector.AnnoyIndexer import AnnoyIndexer
 
 WORKSPACE_DIR = os.path.join(os.path.dirname(__file__), "workspace")
 
