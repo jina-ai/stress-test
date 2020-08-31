@@ -11,7 +11,7 @@ def create_plot(recall_at):
     json_array = json.load(input_file)
 
     result_list = []
-    result_y = []
+    recall_list = []
 
     for item in json_array:
         result_details = {"index_time": None,
@@ -35,12 +35,12 @@ def create_plot(recall_at):
     recall_at_k = result_list_dataframe['recall@1,10,20,50,100']
 
     for inner_l in recall_at_k:
-        result_y.append(inner_l[recall_at])
+        recall_list.append(inner_l[recall_at])
 
-    plt.plot(query_time, result_y)
+    plt.plot(recall_list, query_time)
     _recall_at = "recall@" + str(recall_at)
-    plt.ylabel(_recall_at)
-    plt.xlabel('query_time ')
+    plt.ylabel('query_time')
+    plt.xlabel(_recall_at)
 
     plt.show()
 
