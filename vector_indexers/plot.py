@@ -5,8 +5,23 @@ import pandas as pd
 
 
 @click.command()
-@click.option('--recall_at', '-k', default=0)
+@click.option('--recall_at', '-k', default=10)
 def create_plot(recall_at):
+    if recall_at is 1:
+        k = 0
+    elif recall_at is 10:
+        k = 1
+    elif recall_at is 20:
+        k = 2
+    elif recall_at is 50:
+        k = 3
+    elif recall_at is 100:
+        k = 4
+    else:
+        print("K value not valid. It should be either 1, 10, 20, 50 or 100. K = 10 will be used")
+        k = 1
+
+
     input_file = open('results.json')
     json_array = json.load(input_file)
 
@@ -35,9 +50,9 @@ def create_plot(recall_at):
     recall_at_k = result_list_dataframe['recall@1,10,20,50,100']
 
     for inner_l in recall_at_k:
-        recall_list.append(inner_l[recall_at])
+        recall_list.append(inner_l[k])
 
-    plt.plot(recall_list, query_time)
+    plt.plot(recall_list, query_time*60)
     _recall_at = "recall@" + str(recall_at)
     plt.ylabel('query_time')
     plt.xlabel(_recall_at)
