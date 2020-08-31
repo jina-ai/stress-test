@@ -54,8 +54,12 @@ Important to notice that for -w , -q, and -e to work, an index command must have
 
 To see the visualization run 
 ```
-python plot.py
+python plot.py -k 0
 ```
+
+The argument it accepts is:
+
+- recall_at (-k): The 'k' parameter to be used with recall@k
 
 This will use the `results.json` and plot a graph
 

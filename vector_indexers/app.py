@@ -2,7 +2,6 @@ import click
 import json
 import numpy as np
 import os
-import sys
 
 
 from jina.executors import BaseExecutor

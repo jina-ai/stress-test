@@ -1,11 +1,12 @@
 import os
 
-from jina.hub.indexers.vector.AnnoyIndexer import AnnoyIndexer
+
 
 WORKSPACE_DIR = os.path.join(os.path.dirname(__file__), "workspace")
 
 
 def get_annoy_indexer(params):
+    from jina.hub.indexers.vector.AnnoyIndexer import AnnoyIndexer
     n_trees = params['n_trees']
     search_k = params['search_k']
     name = params['name']
