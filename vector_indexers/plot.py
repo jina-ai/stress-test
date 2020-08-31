@@ -49,16 +49,16 @@ def create_plot(recall_at):
         result_list.append(result_details)
 
     result_list_dataframe = pd.DataFrame(result_list)
-    query_time = result_list_dataframe['query_time']
 
+    query_time = result_list_dataframe['query_time']
     recall_at_k = result_list_dataframe['recall@1,10,20,50,100']
 
     for inner_l in recall_at_k:
         recall_list.append(inner_l[k])
 
-    plt.plot(recall_list, query_time * 60)
+    plt.plot(recall_list, 1/query_time)
     _recall_at = "recall@" + str(recall_at)
-    plt.ylabel('query_time')
+    plt.ylabel('Queries per second (1/s)')
     plt.xlabel(_recall_at)
 
     plt.show()
