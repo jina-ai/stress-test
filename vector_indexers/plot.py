@@ -4,9 +4,7 @@ import json
 import pandas as pd
 
 
-@click.command()
-@click.option('--recall_at', '-k', default=10)
-def create_plot(recall_at):
+def set_k(recall_at):
     if recall_at is 1:
         k = 0
     elif recall_at is 10:
@@ -20,7 +18,13 @@ def create_plot(recall_at):
     else:
         print("K value not valid. It should be either 1, 10, 20, 50 or 100. K = 10 will be used")
         k = 1
+    return k
 
+
+@click.command()
+@click.option('--recall_at', '-k', default=10)
+def create_plot(recall_at):
+    k = set_k(recall_at)
 
     input_file = open('results.json')
     json_array = json.load(input_file)
@@ -52,7 +56,7 @@ def create_plot(recall_at):
     for inner_l in recall_at_k:
         recall_list.append(inner_l[k])
 
-    plt.plot(recall_list, query_time*60)
+    plt.plot(recall_list, query_time * 60)
     _recall_at = "recall@" + str(recall_at)
     plt.ylabel('query_time')
     plt.xlabel(_recall_at)
