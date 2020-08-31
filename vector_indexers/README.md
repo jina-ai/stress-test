@@ -50,7 +50,7 @@ The arguments it accepts are:
 
 Important to notice that for -w , -q, and -e to work, an index command must have been done, and the indexer binaries and vector files must still be in the `workspace` folder
 
-###Visualization
+### Visualization
 
 To see the visualization run 
 ```
@@ -63,7 +63,7 @@ The argument it accepts is:
 
 This will use the `results.json` and plot a graph
 
-####Example
+#### Example
 
 This is how the data for Faiss looks like
 
