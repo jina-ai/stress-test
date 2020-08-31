@@ -61,6 +61,14 @@ The argument it accepts is:
 
 - recall_at (-k): The 'k' parameter to be used with recall@k
 
+The options for recall are k at 1, 10, 20, 50, 100.
+As they are stored in a list, the 'k' parameter should be between 0 and 4.
+0 for recall at 1
+1 for recall at 10
+2 for recall at 20
+3 for recall at 50
+4 for recall at 100
+
 This will use the `results.json` and plot a graph
 
 #### Example
