@@ -1,0 +1,15 @@
+!BaseExecutor
+with: {}
+metas:
+  name: benchmark
+requests:
+  on:
+    [SearchRequest, IndexRequest]:
+      - !BenchmarkDriver 
+        with:
+          num_pods: $num_pods
+          num_epochs: $num_epochs
+          filename: $filename
+          
+    ControlRequest:
+      - !ControlReqDriver {}
