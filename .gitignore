@@ -129,3 +129,6 @@ shell/jina-wizard.sh
 /junit/
 /tests/junit/
 /docs/chapters/proto/docs.md
+
+# VS Code specific
+.vscode/
