@@ -7,14 +7,14 @@ FILE_DIR = os.environ.get('FILE_DIR', './.data')
 os.makedirs(FILE_DIR, exist_ok=True)
 
 
-def html_table(overall_summary_dict):
+def html_table(overall_summary_dict) -> str:
     table_html = ''
     for num_docs, summary in overall_summary_dict.items():
          table_html += DataFrame(summary).loc['mean'].to_frame().rename(columns={'mean': num_docs}).T.round(3).to_html()
     return table_html
 
 
-def plot_num_docs_vs_time(overall_summary_dict, column_of_interest, uid):
+def plot_num_docs_vs_time(overall_summary_dict, column_of_interest, uid) -> str:
     """ Plots num_docs (log scale) vs total time"""
     x, y = [], []
     for num_docs, summary in overall_summary_dict.items():

@@ -1,0 +1,14 @@
+!BaseExecutor
+with: {}
+metas:
+  name: base_benchmark
+  py_modules: benchmark_driver.py
+requests:
+  on:
+    [SearchRequest, TrainRequest, IndexRequest]:
+      - !BenchmarkDriver
+        with:
+          num_epochs: $NUM_EPOCHS
+          file_path: $FILE_PATH
+    ControlRequest:
+      - !ControlReqDriver {}
