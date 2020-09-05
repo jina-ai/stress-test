@@ -132,3 +132,6 @@ shell/jina-wizard.sh
 
 # VS Code specific
 .vscode/
+
+# Parquet file for benchmark
+docs_*.parquet
