@@ -1,27 +1,13 @@
 import os
-import uuid
 from math import ceil
 
 import click
 from jina.flow import Flow
 
-from post_process import clean_dataframe, evaluate_times, get_summary
-from utils import random_docs_generator, random_bytes_generator, generate_filename, get_list_of_num_docs
-from summary import html_table, plot_num_docs_vs_time
-
-
-def configure_env():
-    # convert to int while using env variables
-    os.environ['START_NUM_DOCS'] = os.environ.get('START_NUM_DOCS', '512')
-    os.environ['MULTIPLIER_NUM_DOCS'] = os.environ.get('MULTIPLIER_NUM_DOCS', '4')
-    os.environ['COUNT_NUM_DOCS'] = os.environ.get('COUNT_NUM_DOCS', '10')
-    os.environ['BATCH_SIZE'] = os.environ.get('BATCH_SIZE', '256')
-    os.environ['EMBED_DIM'] = os.environ.get('EMBED_DIM', '16')
-    os.environ['FILE_DIR'] = os.environ.get('FILE_DIR', './.data')
-    os.makedirs(os.environ['FILE_DIR'], exist_ok=True)
-    
-    
-COLUMN_OF_INTEREST = 'g:send' # to be changed to 'roundtrip' once issue is fixed
+from post_process import clean_dataframe, evaluate_times, \
+    get_summary, write_benchmark_to_markdown
+from utils import configure_env, configure_file_path, random_docs_generator, \
+    random_bytes_generator, get_list_of_num_docs
 
 
 def index(yaml_path, num_docs, index_type='bytes', num_bytes_per_doc=10, num_chunks_per_doc=5, num_sentences_per_doc=5):
@@ -36,6 +22,8 @@ def index(yaml_path, num_docs, index_type='bytes', num_bytes_per_doc=10, num_chu
         pass
         
     f = Flow().load_config(filename=yaml_path)
+    f = f.add(name='benchmark_pod', 
+              uses=f'yamls/pods/benchmark_driver.yml')
     with f:
         f.index(input_fn=input_fn, 
                 batch_size=int(os.environ['BATCH_SIZE']))
@@ -54,17 +42,32 @@ def query(yaml_path, num_docs=1, index_type='bytes', ):
     elif index_type == 'sentences':
         pass
     f = Flow().load_config(filename=yaml_path)
+    f = f.add(name='benchmark_pod',
+              uses='yamls/pods/benchmark_driver.yml')
     with f:
         f.search(input_fn=input_fn)
 
 
 @click.command()
-@click.option('--index-type', '-i', type=click.Choice(['bytes', 'jina_pb2.Document', 'sentences']), default='bytes')
-@click.option('--index-yaml', default='index.yml')
-@click.option('--query-yaml', default='query.yml')
-@click.option('--num-bytes-per-doc', default=10)
-@click.option('--num-chunks-per-doc', default=5)
-@click.option('--num-sentences-per-doc', default=10)
+@click.option('--index-type', 
+              type=click.Choice(['bytes', 'jina_pb2.Document', 'sentences']), 
+              default='bytes', 
+              help='Type of input to be indexed & queried (Default - bytes)')
+@click.option('--index-yaml', 
+              default='index.yml',
+              help='index yaml file to be loaded in the yamls directory (Default - index.yml)')
+@click.option('--query-yaml', 
+              default='query.yml',
+              help='query yaml file to be loaded in the yamls directory (Default - query.yml)')
+@click.option('--num-bytes-per-doc', 
+              default=10,
+              help='Default - 10')
+@click.option('--num-chunks-per-doc', 
+              default=5,
+              help='Default - 5')
+@click.option('--num-sentences-per-doc', 
+              default=10,
+              help='Default - 10')
 def run_benchmark(index_type, index_yaml, query_yaml, num_bytes_per_doc, 
                   num_chunks_per_doc, num_sentences_per_doc):
     configure_env()
@@ -75,39 +78,34 @@ def run_benchmark(index_type, index_yaml, query_yaml, num_bytes_per_doc,
                                          multiplier=os.environ['MULTIPLIER_NUM_DOCS'],
                                          count=os.environ['COUNT_NUM_DOCS']):
         os.environ['NUM_EPOCHS'] = str(ceil(num_docs / int(os.environ['BATCH_SIZE'])))
-        file_name = generate_filename(num_docs, index_type)
-        file_path = os.path.join(os.path.dirname(__file__), f"{os.environ['FILE_DIR']}/{file_name}")
-        os.environ['FILE_PATH'] = file_path
+        index_file_path = configure_file_path(num_docs=num_docs, 
+                                              op_type='index', 
+                                              input_type=index_type)     
+        index_pod_names = index(yaml_path=index_yaml,
+                                num_docs=num_docs,
+                                index_type=index_type,
+                                num_bytes_per_doc=num_bytes_per_doc,
+                                num_chunks_per_doc=num_chunks_per_doc,
+                                num_sentences_per_doc=num_sentences_per_doc)
         
-        pod_names = index(yaml_path=index_yaml,
-                          num_docs=num_docs,
-                          index_type=index_type,
-                          num_bytes_per_doc=num_bytes_per_doc,
-                          num_chunks_per_doc=num_chunks_per_doc,
-                          num_sentences_per_doc=num_sentences_per_doc)
+        query_file_path = configure_file_path(num_docs=num_docs, 
+                                              op_type='query', 
+                                              input_type=index_type)
         query(yaml_path=query_yaml,
               num_docs=1)
         
-        routes_df = clean_dataframe(file_path=file_path)
+        routes_df = clean_dataframe(file_path=index_file_path)
         routes_df, columns_of_interest = evaluate_times(routes_df=routes_df, 
                                                         num_docs=num_docs, 
-                                                        pod_names=pod_names)
-        current_summary = get_summary(routes_df=routes_df,
-                                      columns_of_interest=columns_of_interest)
-        overall_summary[num_docs] = current_summary
+                                                        pod_names=index_pod_names)
+        current_index_summary = get_summary(routes_df=routes_df,
+                                            columns_of_interest=columns_of_interest)
+        overall_summary[num_docs] = current_index_summary
     #     os.remove(f'{FILE_DIR}/{filename}')
-
-    print(overall_summary)
-    html_table_text = html_table(overall_summary_dict=overall_summary)
-    uuid_gen = uuid.uuid4().hex.lower()[0:10]
-    image_filename = plot_num_docs_vs_time(overall_summary_dict=overall_summary,
-                                           column_of_interest=COLUMN_OF_INTEREST,
-                                           uid=uuid_gen) # to be changed to gh hash
-    with open('README.MD', 'w') as readme_f:
-        readme_f.write('<h3>Results</h3>')
-        readme_f.write(html_table_text)
-        readme_f.write('\n\n\n<h3>Num docs vs Time<h3>\n\n')
-        readme_f.write(f'![Num docs vs Time]({image_filename})')
+    ctx = click.get_current_context()
+    click_help_msg = ctx.get_help()
+    write_benchmark_to_markdown(overall_summary=overall_summary,
+                                click_help_msg=click_help_msg)
 
 
 if __name__ == '__main__':

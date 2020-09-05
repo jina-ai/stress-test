@@ -6,6 +6,3 @@ pods:
   pod_1:
     uses: _pass
     parallel: 4
-  benchmark_pod:
-    uses: yamls/pods/benchmark_driver.yml
-    parallel: 1

@@ -1,6 +1,12 @@
+import os
+import uuid
 from typing import Dict
-import pandas as pd
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+COLUMN_OF_INTEREST = 'g:send' # to be changed to 'roundtrip' once issue is fixed
 
 def clean_dataframe(file_path: str = 'routes.parquet') -> pd.DataFrame:
     routes_df = pd.read_parquet(file_path)
@@ -95,3 +101,47 @@ def get_summary(routes_df, columns_of_interest) -> Dict:
         summary[_]['min'] = routes_df[_].min().total_seconds()
         summary[_]['sum'] = routes_df[_].sum().total_seconds()
     return summary
+
+def write_benchmark_to_markdown(overall_summary, click_help_msg):
+    with open('README.template.MD') as template_md:
+        template_text = template_md.readlines()
+    
+    print(overall_summary)
+    html_table_text = html_table(overall_summary_dict=overall_summary)
+    uuid_gen = uuid.uuid4().hex.lower()[0:10]
+    image_filename = plot_num_docs_vs_time(overall_summary_dict=overall_summary,
+                                           column_of_interest=COLUMN_OF_INTEREST,
+                                           uid=uuid_gen,
+                                           file_dir=os.environ['FILE_DIR']) # to be changed to gh hash
+    with open('README.MD', 'w') as readme_f:
+        readme_f.writelines(template_text)
+        readme_f.write('<h3> Usage </h3>\n\n')
+        readme_f.write(f'```\n{click_help_msg}\n```')
+        readme_f.write('\n\n<h3>Results</h3>\n')
+        readme_f.writelines(f'\n\n{html_table_text}')
+        readme_f.write('\n\n\n<h3>Num docs vs Time<h3>\n\n')
+        readme_f.write(f'![Num docs vs Time]({image_filename})')
+    
+
+def html_table(overall_summary_dict) -> str:
+    table_html = ''
+    for num_docs, summary in overall_summary_dict.items():
+         table_html += pd.DataFrame(summary).loc['mean'].to_frame().rename(columns={'mean': num_docs}).T.round(3).to_html()
+    return table_html
+
+
+def plot_num_docs_vs_time(overall_summary_dict, column_of_interest, uid, file_dir) -> str:
+    """ Plots num_docs (log scale) vs total time"""
+    x, y = [], []
+    for num_docs, summary in overall_summary_dict.items():
+        x.append(num_docs)
+        y.append(summary[column_of_interest]['sum'])
+    plt.figure(figsize=(16, 4))
+    plt.plot(x, y, linestyle='--', marker='o')
+    plt.xlabel('Number of docs indexed')
+    plt.ylabel(f'{column_of_interest} total time (secs)')
+    plt.xscale('log', base=2)
+    plt.tight_layout()
+    image_filename = f'{file_dir}/num-docs-vs-time-{uid}.svg'
+    plt.savefig(image_filename)
+    return image_filename

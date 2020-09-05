@@ -1,9 +1,36 @@
+import os
 from typing import Iterator, List
+
 import numpy as np
 from google.protobuf.json_format import MessageToDict
 
 from jina.proto import jina_pb2
 from jina.drivers.helper import array2pb
+
+
+def configure_env():
+    # convert to int while using env variables
+    os.environ['START_NUM_DOCS'] = os.environ.get('START_NUM_DOCS', str(2 ** 16))
+    os.environ['MULTIPLIER_NUM_DOCS'] = os.environ.get('MULTIPLIER_NUM_DOCS', '4')
+    os.environ['COUNT_NUM_DOCS'] = os.environ.get('COUNT_NUM_DOCS', '5')
+    os.environ['BATCH_SIZE'] = os.environ.get('BATCH_SIZE', '256')
+    os.environ['EMBED_DIM'] = os.environ.get('EMBED_DIM', '16')
+    os.environ['FILE_DIR'] = os.environ.get('FILE_DIR', '.data')
+    os.makedirs(os.environ['FILE_DIR'], exist_ok=True)
+    
+    
+def configure_file_path(num_docs, op_type, input_type):
+    file_name = generate_filename(num_docs=num_docs, 
+                                  op_type=op_type, 
+                                  input_type=input_type)
+    file_path = os.path.join(os.path.dirname(__file__), f"{os.environ['FILE_DIR']}/{file_name}")
+    os.environ['FILE_PATH'] = file_path
+    return file_path
+
+
+def generate_filename(num_docs, op_type, input_type) -> str:
+    """ Generates filename using num_docs, op_type, input_type """
+    return f'docs_{num_docs}_{op_type}_{input_type}.parquet'
 
 
 def random_bytes_generator(num_docs, num_bytes) -> Iterator[bytes]:
@@ -47,6 +74,3 @@ def get_list_of_num_docs(start, multiplier, count) -> List[int]:
     return [int(start) * (int(multiplier) ** i) for i in range(int(count))]
 
 
-def generate_filename(num_docs, index_type) -> str:
-    """ Generates filename using num_docs & index_type """
-    return f'docs_{num_docs}_index_{index_type}.parquet'
