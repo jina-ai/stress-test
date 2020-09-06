@@ -15,14 +15,11 @@ class BenchmarkDriver(BaseDriver):
             self._prev_envelopes.append(self.envelope)
             if len(self._prev_envelopes) == self.num_epochs:
                 for envelope in self._prev_envelopes:
-                    # print("**"*40)
-                    # print(envelope.sender_id, envelope.receiver_id, envelope.request_id)
                     current_route_dict = {}
                     for _pod in envelope.routes:
                         name = _pod.pod
                         start_time = _pod.start_time.ToDatetime()
                         end_time = _pod.end_time.ToDatetime()
-                        # print(name, start_time, end_time)
                         current_route_dict[name] = [start_time, end_time]
                     BenchmarkDriver.routes.append(current_route_dict)
                 DataFrame(BenchmarkDriver.routes).to_parquet(self.file_path)
