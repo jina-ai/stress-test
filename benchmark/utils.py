@@ -10,8 +10,8 @@ from jina.drivers.helper import array2pb
 
 def configure_env():
     # convert to int while using env variables
-    os.environ['START_NUM_DOCS'] = os.environ.get('START_NUM_DOCS', str(2 ** 16))
-    os.environ['MULTIPLIER_NUM_DOCS'] = os.environ.get('MULTIPLIER_NUM_DOCS', '4')
+    os.environ['START_NUM_DOCS'] = os.environ.get('START_NUM_DOCS', str(2 ** 15))
+    os.environ['MULTIPLIER_NUM_DOCS'] = os.environ.get('MULTIPLIER_NUM_DOCS', '2')
     os.environ['COUNT_NUM_DOCS'] = os.environ.get('COUNT_NUM_DOCS', '5')
     os.environ['BATCH_SIZE'] = os.environ.get('BATCH_SIZE', '256')
     os.environ['EMBED_DIM'] = os.environ.get('EMBED_DIM', '16')
