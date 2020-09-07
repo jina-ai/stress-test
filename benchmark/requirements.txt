@@ -1,0 +1,5 @@
+jina
+click
+pandas
+pyarrow
+matplotlib

@@ -1,0 +1,8 @@
+!Flow
+pods:
+  pod_0:
+    uses: _pass
+    parallel: 2
+  pod_1:
+    uses: _pass
+    parallel: 4
