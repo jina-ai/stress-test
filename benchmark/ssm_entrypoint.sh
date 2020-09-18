@@ -45,6 +45,7 @@ if [[ $COMPILATION == "git" ]]; then
 fi
 
 cd $HOME_DIR/stress-test/benchmark
+pip3 install -r requirements.txt
 python3.8 app.py --input-type $INPUT_TYPE --index-yaml $INDEX_YAML --query-yaml $QUERY_YAML \
     --num-bytes-per-doc $NUM_BYTES_PER_DOC --num-chunks-per-doc $NUM_CHUNKS_PER_DOC \
     --num-sentences-per-doc $NUM_SENTENCES_PER_DOC
