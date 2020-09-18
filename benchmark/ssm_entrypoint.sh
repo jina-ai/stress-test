@@ -2,6 +2,20 @@
 
 HOME_DIR=/mnt/data
 
+function usage() {
+    cat <<EOF
+    Usage: $0 [options]
+
+    -h|--help                  Entrypoint script for running stress-test on AWS.
+    -j|--jina-compilation       Select whether to download jina from pip or compile from git
+                                Default - pip
+                                Allowed values [pip, git]
+    -b|--jina-branch            If jina is compiled via git, select the branch
+                                Default - master
+
+EOF
+}
+
 for arg in "$@"; do
     shift
     case "$arg" in
@@ -15,15 +29,13 @@ done
 while getopts "hj:b:" opt
 do
   case "$opt" in
-    "h") print_usage; exit 0 ;;
+    "h") usage; exit 0 ;;
     "j") COMPILATION=${OPTARG} ;;
     "b") BRANCH=${OPTARG} ;;
-    "?") print_usage >&2; exit 1 ;;
+    "?") usage >&2; exit 1 ;;
   esac
 done
 
-echo $COMPILATION
-echo $BRANCH
 
 if [[ -n "$COMPILATION" ]]; then
     echo "Jina will be downloaded via ${COMPILATION}"
@@ -45,13 +57,7 @@ if [[ $COMPILATION == "git" ]]; then
 fi
 
 cd $HOME_DIR/stress-test/benchmark
+echo "Triggering stress-test --"
 pip3 install -r requirements.txt
-python3.8 app.py --input-type $INPUT_TYPE --index-yaml $INDEX_YAML --query-yaml $QUERY_YAML \
-    --num-bytes-per-doc $NUM_BYTES_PER_DOC --num-chunks-per-doc $NUM_CHUNKS_PER_DOC \
-    --num-sentences-per-doc $NUM_SENTENCES_PER_DOC
-
-
-# cd && git clone -b $ST_BRANCH --single-branch https://github.com/jina-ai/stress-test.git
-# cd stress-test/benchmark && pip3 install -r requirements.txt
-
+python3.8 app.py
 

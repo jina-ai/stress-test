@@ -35,12 +35,13 @@ def is_config_set():
         if not isinstance(env['NUM_DOCS'], list):
             print(f'Invalid NUM_DOCS')
             return False
-        if not isinstance(env['BATCH_SIZE'], int) or\
-            not isinstance(env['EMBED_DIM'], int):
-            print("Invalid batch size or embed size")
-            return False 
         os.makedirs(env['FILE_DIR'], exist_ok=True)
-        return True
+        keys = [env['BATCH_SIZE'], env['EMBED_DIM'], env['NUM_BYTES_PER_DOC'], 
+            env['NUM_CHUNKS_PER_DOC'], env['NUM_SENTENCES_PER_DOC']]
+        if not all(isinstance(i, int) for i in keys):
+            print(f'Please make sure params are integers')
+            return False
+        return env
     except KeyError as exp:
         print(f'Following key doesn\'t exist {exp}')
     except Exception as exp:
@@ -48,11 +49,11 @@ def is_config_set():
         return False
     
     
-def configure_file_path(num_docs, op_type, input_type):
+def configure_file_path(num_docs, op_type, input_type, file_dir):
     file_name = generate_filename(num_docs=num_docs, 
                                   op_type=op_type, 
                                   input_type=input_type)
-    file_path = os.path.join(os.path.dirname(__file__), f"{os.environ['FILE_DIR']}/{file_name}")
+    file_path = os.path.join(os.path.dirname(__file__), f'{file_dir}/{file_name}')
     os.environ['FILE_PATH'] = file_path
     return file_path
 

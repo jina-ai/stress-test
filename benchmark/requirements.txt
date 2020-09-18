@@ -1,4 +1,6 @@
 jina
+boto3
+pyyaml
 click
 pandas
 pyarrow
