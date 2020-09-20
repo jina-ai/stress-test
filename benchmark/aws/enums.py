@@ -32,3 +32,14 @@ class SSMDeletionStatus(Enum):
 class SSMDeletionTime(Enum):
     TIMEOUT = 120
     SLEEP = 5
+
+
+class PluginStatus(Enum):
+    SUCCESS = ['Success']
+    WAIT = ['Pending', 'InProgress', 'Delayed']
+    FAILURE = ['Cancelled', 'TimedOut', 'Failed', 'Cancelling']
+
+
+class PluginTime(Enum):
+    TIMEOUT = 14400
+    SLEEP = 10

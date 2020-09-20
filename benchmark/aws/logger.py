@@ -6,11 +6,11 @@ from datetime import datetime
 
 class LengthFilter(logging.Filter):
     def filter(self, record):
-        record.file_func_lineno = f'{record.filename}:{record.funcName()}:L{record.lineno}' 
+        record.file_func_lineno = f'{record.filename}:{record.funcName}():L{record.lineno}' 
         return True
 
 def default_formatter():
-    _fmt = '%(asctime)s | %(levelname)6s | %(file_func_lineno)30s | %(message)s'
+    _fmt = '%(asctime)s | %(levelname)6s | %(file_func_lineno)40s | %(message)s'
     _datefmt = '%b %d %H:%M:%S'
     return logging.Formatter(fmt=_fmt, datefmt=_datefmt)
 

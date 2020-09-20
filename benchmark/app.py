@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from math import ceil
 
 import yaml
@@ -60,7 +61,6 @@ def run_benchmark():
         sys.exit(-1)
     index_yaml = os.path.join(os.path.dirname(__file__), env['INDEX_YAML'])
     query_yaml = os.path.join(os.path.dirname(__file__), env['QUERY_YAML'])
-    print(index_yaml)
     overall_summary = {
         'index': {},
         'query': {}
@@ -96,7 +96,8 @@ def run_benchmark():
         current_index_summary = get_summary(routes_df=index_routes_df,
                                             columns_of_interest=columns_of_interest)
         overall_summary['index'][num_docs] = current_index_summary
-        
+        print(f'Sleeping for 10secs for a cooldown')
+        time.sleep(10)
         # query_routes_df = clean_dataframe(file_path=query_file_path)
         # query_routes_df, columns_of_interest = evaluate_times(routes_df=query_routes_df, 
         #                                                       num_docs=1, 
