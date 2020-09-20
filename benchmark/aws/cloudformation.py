@@ -27,7 +27,7 @@ class CFNStack:
                                                  Capabilities=['CAPABILITY_NAMED_IAM'])
             self._stack_id = response['StackId']
             self.logger.info(f'Got stack id `{self._stack_id}`. Calling `stack_create_complete` waiter!')
-            self.wait(waiter_name='stack_create_complete')
+            self._created = self.wait(waiter_name='stack_create_complete')
         except botocore.exceptions.ClientError as exp:
             raise StackCreationFailed(f'Stack creation failed with exception. Exiting! \n{exp}')
         except Exception as exp:
@@ -39,7 +39,13 @@ class CFNStack:
     
     @property
     def id(self):
-        return self._stack_id
+        if hasattr(self, '_stack_id'):
+            return self._stack_id
+    
+    @property
+    def created(self):
+        if hasattr(self, '_created'):
+            return self._created
     
     @property
     def status(self):
@@ -74,8 +80,10 @@ class CFNStack:
         with TimeContext(f'Waiting for `{waiter_name}`'):
             try:
                 self._client_wrapper.waiter.wait(StackName=self._name)
+                return True
             except botocore.exceptions.WaiterError:
                 self.logger.error(f'Operation failed after waiting!')
+                return False
     
     def delete(self):
         try:

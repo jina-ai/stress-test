@@ -42,7 +42,7 @@ def trigger(cfn, ssm):
     try:
         with CFNStack(name=stack_name, template=cfn_yml) as cfn_stack:
             
-            if cfn_stack.status:
+            if cfn_stack.created:
                 ec2_instance_id = cfn_stack.resources['EC2Instance']
                 logger.info(f'CFNStack: Name: `{cfn_stack.name}` ID:`{cfn_stack.id}`')
                 logger.info(f'EC2 Instance: `{ec2_instance_id}`')
