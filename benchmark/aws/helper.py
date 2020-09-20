@@ -8,6 +8,12 @@ from string import ascii_lowercase
 from logger import get_logger
 
 
+def is_aws_cred_set():
+    """ Checks if access key id & secret access key env variables set """
+    keys = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
+    return all(len(os.environ.get(k, '')) > 0 for k in keys) 
+
+
 def file_exists(filepath):
     return os.path.isfile(path=filepath)
 

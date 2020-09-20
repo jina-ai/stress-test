@@ -3,7 +3,7 @@ import sys
 import time
 import click
 
-from helper import file_exists, random_text
+from helper import file_exists, random_text, is_aws_cred_set
 from logger import get_logger
 from excepts import StackCreationFailed, SSMDocumentCreationFailed
 from cloudformation import CFNStack
@@ -13,12 +13,16 @@ from ssm import SSMDocument
 @click.command()
 @click.option('--cfn', 
               default='cloud_ymls/cfn-stress-test.yml', 
-              help='CFN Stack to be used for deployment (Default - aws/cloud_ymls/cfn-stress-test.yml)')
+              help='CFN Stack to be used for deployment (Default - cloud_ymls/cfn-stress-test.yml)')
 @click.option('--ssm', 
               default='cloud_ymls/ssm-stress-test.yml',
-              help='SSM Document to be used for command exec (Default - aws/cloud_ymls/ssm-stress-test.yml)')
+              help='SSM Document to be used for command exec (Default - cloud_ymls/ssm-stress-test.yml)')
 def trigger(cfn, ssm):
     logger = get_logger(__name__)
+    
+    if not is_aws_cred_set():
+        logger.error('AWS Creds are not set! Exiting!')
+        sys.exit(1)
     
     if not file_exists(filepath=cfn) or not file_exists(filepath=ssm):
         logger.error('Invalid cfn yaml or ssm yaml. Exiting!')

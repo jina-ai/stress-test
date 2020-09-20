@@ -1,13 +1,11 @@
+import os
 import boto3
 from logger import get_logger
 
-AWS_ACCESS_KEY_ID = 'AKIAWB5UZPEQPQNAYQV7'
-AWS_SECRET_ACCESS_KEY = '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'
-
 
 class AWSClientWrapper:
-    def __init__(self, service, access_key_id=AWS_ACCESS_KEY_ID, 
-                 secret_access_key=AWS_SECRET_ACCESS_KEY):
+    def __init__(self, service, access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'), 
+                 secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')):
         self.logger = get_logger(self.__class__.__name__)
         self._service = service
         self._access_key_id = access_key_id
