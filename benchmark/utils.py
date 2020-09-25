@@ -1,6 +1,7 @@
 import os
 from typing import Iterator, List
 
+import yaml
 import numpy as np
 from google.protobuf.json_format import MessageToDict
 
@@ -8,22 +9,51 @@ from jina.proto import jina_pb2
 from jina.drivers.helper import array2pb
 
 
-def configure_env():
-    # convert to int while using env variables
-    os.environ['START_NUM_DOCS'] = os.environ.get('START_NUM_DOCS', str(2 ** 15))
-    os.environ['MULTIPLIER_NUM_DOCS'] = os.environ.get('MULTIPLIER_NUM_DOCS', '2')
-    os.environ['COUNT_NUM_DOCS'] = os.environ.get('COUNT_NUM_DOCS', '5')
-    os.environ['BATCH_SIZE'] = os.environ.get('BATCH_SIZE', '256')
-    os.environ['EMBED_DIM'] = os.environ.get('EMBED_DIM', '16')
-    os.environ['FILE_DIR'] = os.environ.get('FILE_DIR', '.data')
-    os.makedirs(os.environ['FILE_DIR'], exist_ok=True)
+def load_config():
+    try:
+        with open('config.yml') as f:
+            config = yaml.safe_load(f)
+        return config
+    except yaml.YAMLError as e:
+        print(e)
+        
+
+def is_config_set():
+    config = load_config()
+    env = config['env']
+    allowed_input_types = ['bytes', 'ndarray', 'jina_pb2.Document']
+    try:
+        if env['INPUT_TYPE'] not in allowed_input_types:
+            print(f'Invalid input type {env["INPUT_TYPE"]}. Allowed {allowed_input_types}')
+            return False
+        if not os.path.isfile(env['INDEX_YAML']):
+            print(f'Index file doesn\'t exist')
+            return False
+        if not os.path.isfile(env['QUERY_YAML']):
+            print(f'Query file doesn\'t exist')
+            return False
+        if not isinstance(env['NUM_DOCS'], list):
+            print(f'Invalid NUM_DOCS')
+            return False
+        os.makedirs(env['FILE_DIR'], exist_ok=True)
+        keys = [env['BATCH_SIZE'], env['EMBED_DIM'], env['NUM_BYTES_PER_DOC'], 
+            env['NUM_CHUNKS_PER_DOC'], env['NUM_SENTENCES_PER_DOC']]
+        if not all(isinstance(i, int) for i in keys):
+            print(f'Please make sure params are integers')
+            return False
+        return env
+    except KeyError as exp:
+        print(f'Following key doesn\'t exist {exp}')
+    except Exception as exp:
+        print(f'Got the following exception while checking configs {exp}')
+        return False
     
     
-def configure_file_path(num_docs, op_type, input_type):
+def configure_file_path(num_docs, op_type, input_type, file_dir):
     file_name = generate_filename(num_docs=num_docs, 
                                   op_type=op_type, 
                                   input_type=input_type)
-    file_path = os.path.join(os.path.dirname(__file__), f"{os.environ['FILE_DIR']}/{file_name}")
+    file_path = os.path.join(os.path.dirname(__file__), f'{file_dir}/{file_name}')
     os.environ['FILE_PATH'] = file_path
     return file_path
 
