@@ -1,0 +1,24 @@
+jtype: NumpyIndexer
+with:
+  index_filename: vec.gz
+metas:
+  name: vec_idx  # a customized name
+  workspace: ./workspace
+requests:
+  on:
+    ControlRequest:
+      - jtype: ControlReqDriver {}
+    SearchRequest:
+      - jtype: VectorSearchDriver
+        with:
+          traversal_paths: ['r']
+      - jtype: ExcludeQL
+        with:
+          fields:
+            - embedding
+            - content
+          traversal_paths: ['r']
+    IndexRequest:
+      - jtype: VectorIndexDriver
+        with:
+          traversal_paths: ['r']
