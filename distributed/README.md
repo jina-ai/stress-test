@@ -32,6 +32,8 @@
       - `client`: `grpc` or `websockets` (pass according to flow gateway)
       - `num_clients`: number of concurrent clients (TODO)
 
+    - `sleep_time` can be passed with any step to sleep before execution.
+
 1. Worry only about jina specific things:
 
    - `flow/pod yaml`
@@ -42,9 +44,13 @@
 
 - [ ] Multiple clients (code exists, needs refactoring)
 - [ ] Consume host env vars from `jina-terraform/custom-jinad-deployment`
-- [ ] Log metrics (what, how, where!)
-- [ ] Upload metrics to S3 (shoule be a new `step`)
+- [ ] Log metrics (what & how)
+  - [X] Time spent at each pod for each request (info available with response). This can help us determine time for indexing/encoding/querying/ranking etc.
+  - [ ] Number of docs per sec / QPS
+  - [ ] System metrics using cloudwatch (@niuzs-alan)
+- [ ] Upload metrics to S3 (should be a new `step`)
 - [ ] Send metrics update to Slack (shoule be a new `step`)
+- [ ] Currently we index random images/text. Should move to a "good" dataset.
 
 ---------------------------
 
