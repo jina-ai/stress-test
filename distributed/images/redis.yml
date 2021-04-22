@@ -1,0 +1,26 @@
+jtype: RedisDBIndexer
+with:
+  db: 0
+  port: 6379
+metas:
+  name: redis_idx
+  workspace: ./workspace
+requests:
+  on:
+    ControlRequest:
+      - jtype: ControlReqDriver {}
+    SearchRequest:
+      - jtype: KVSearchDriver
+        with:
+          traversal_paths: ['m']
+    [IndexRequest, UpdateRequest, DeleteRequest]:
+    - jtype: ExcludeQL
+      with:
+        fields:
+          - content
+          - embedding
+          - buffer
+        traversal_paths: ['r']
+    - jtype: KVIndexDriver
+      with:
+        traversal_paths: ['r']

@@ -1,0 +1,31 @@
+!AnnoyIndexer
+with:
+  #index_filename: 'vec.gz' # Should be overwriten by ref_indexer index filename
+  n_trees: {{ JINA_ANNOY_NUM_TREES }}
+  search_k: {{ JINA_ANNOY_SEARCH_K }}
+  ref_indexer:
+    !NumpyIndexer
+    metas:
+      workspace: '/docker-workspace'
+      name: vec_idx
+    with:
+      index_filename: 'vec.gz'
+metas:
+  name: annoyidx
+  py_modules:
+    - workspace/__init__.py
+  workspace: '/docker-workspace'
+requests:
+  on:
+    SearchRequest:
+      - !VectorSearchDriver
+        with:
+          traversal_paths: ['r']
+      - !ExcludeQL
+        with:
+          fields:
+            - embedding
+            - content
+          traversal_paths: ['r']
+    ControlRequest:
+      - !ControlReqDriver {}

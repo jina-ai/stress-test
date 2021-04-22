@@ -1,0 +1,88 @@
+jobs:
+  images-stress-test:
+    steps:
+      - method: create_workspace
+        environment:
+          JINA_GATEWAY_REST: true
+          JINA_GATEWAY_PORT: 23456
+          JINA_ENCODER_SHARDS: 2
+          JINA_VEC_INDEXER_SHARDS: 2
+          JINA_KV_INDEXER_SHARDS: 1
+          JINA_SCHEDULING: load_balance
+          JINA_ENCODER_DRIVER_BATCHING: 16
+          JINA_DISTANCE_REVERSE: false
+          JINA_ANNOY_IMAGE: docker://jinahub/pod.indexer.annoyindexer:0.0.16-1.0.0
+          JINA_ANNOY_NUM_TREES: 100
+          JINA_ANNOY_SEARCH_K: -1
+          OMP_NUM_THREADS: 1
+          JINA_FAISS_IMAGE: docker://jinahub/pod.indexer.faissindexer:0.0.15-1.0.0
+          JINA_FAISS_INDEX_KEY: IVF50,Flat
+          JINA_WORKSPACE: workspace
+          JINA_ENCODER_HOST: 18.211.189.155
+          JINA_ENCODER_PORT: 8000
+          JINA_VEC_INDEXER_HOST: 52.1.160.149
+          JINA_VEC_INDEXER_PORT: 8000
+          JINA_KV_INDEXER_HOST: 54.163.135.15
+          JINA_KV_INDEXER_PORT: 8000
+        files:
+          - images/redis.yml
+          - images/annoy_indexer.yml
+          - images/binarypb.yml
+          - images/faiss_indexer.yml
+          - images/index_binarypb.yml
+          - images/query.yml
+          - images/query_annoy_binarypb.yml
+          - images/query_faiss.yml
+          - images/scann_indexer.yml
+          - images/encoder.yml
+          - images/index.yml
+          - images/merge_and_topk.yml
+          - images/query_annoy.yml
+          - images/query_binarypb.yml
+          - images/query_faiss_binarypb.yml
+          - images/vec.yml
+          - images/index_local.yml
+          - images/query_local.yml
+
+      - method: update_workspace
+        environment:
+          JINA_KV_INDEXER_SHARDS: 1
+        files:
+          - images/redis.yml
+
+      - method: start_flow
+        file: images/index_local.yml
+      - sleep_time: 2
+        method: index
+        execution_time: 30
+        inputs:
+          method: random_images
+          kwargs:
+            num_docs: 50
+        on_always:
+          method: validate_images
+          kwargs:
+            top_k: 2
+        client: websocket
+        num_clients: 1
+        request_size: 5
+      - method: terminate_flow
+
+      - method: start_flow
+        file: images/query_local.yml
+      - sleep_time: 1
+        method: query
+        execution_time: 30
+        inputs:
+          method: random_images
+          kwargs:
+            num_docs: 10
+        on_always:
+          method: validate_images
+          kwargs:
+            top_k: 2
+        client: websocket
+        num_clients: 1
+        request_size: 5
+      - method: terminate_flow
+      - method: delete_workspace

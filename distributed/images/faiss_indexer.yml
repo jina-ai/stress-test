@@ -1,0 +1,30 @@
+jtype: FaissIndexer
+with:
+  index_key: {{ JINA_FAISS_INDEX_KEY }}
+  max_num_training_points: 50000
+  ref_indexer:
+    jtype: NumpyIndexer
+    metas:
+      workspace: '/docker-workspace'
+      name: vec_idx
+    with:
+      index_filename: 'vec.gz'
+metas:
+  name: faissidx
+  py_modules:
+    - workspace/__init__.py
+  workspace: '/docker-workspace'
+requests:
+  on:
+    SearchRequest:
+      - jtype: VectorSearchDriver
+        with:
+          traversal_paths: ['r']
+      - jtype: ExcludeQL
+        with:
+          fields:
+            - embedding
+            - content
+          traversal_paths: ['r']
+    ControlRequest:
+      - !ControlReqDriver {}

@@ -1,0 +1,24 @@
+jtype: ScannIndexer
+with:
+  distance_measure: 'squared_l2'
+  ref_indexer:
+    jtype: NumpyIndexer
+    metas:
+      workspace: '/docker-workspace'
+      name: vec_idx
+    with:
+      index_filename: 'vec.gz'
+metas:
+  name: scannidx
+  py_modules:
+    - workspace/__init__.py
+  workspace: '/docker-workspace'
+requests:
+  on:
+    SearchRequest:
+      - jtype: VectorSearchDriver
+        with:
+          executor: scannidx
+          traversal_paths: ['r']
+    ControlRequest:
+      - jtype: ControlReqDriver {}

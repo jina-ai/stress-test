@@ -1,0 +1,26 @@
+!BinaryPbIndexer
+with:
+  index_filename: doc.gz
+metas:
+  name: kvidx
+  workspace: ./workspace
+requests:
+  on:
+    ControlRequest:
+      - !ControlReqDriver {}
+    SearchRequest:
+      - !KVSearchDriver
+        with:
+          traversal_paths: ['m']
+    [IndexRequest, UpdateRequest, DeleteRequest]:
+    - !ExcludeQL
+      with:
+        fields:
+          - content
+          - embedding
+          - buffer
+        traversal_paths: ['r']
+    - !KVIndexDriver
+      with:
+        traversal_paths: ['r']
+

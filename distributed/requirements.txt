@@ -1,0 +1,4 @@
+jina[http]
+pydantic
+pyyaml
+chevron
