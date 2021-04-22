@@ -54,7 +54,7 @@ jobs:
         file: images/index_local.yml
       - sleep_time: 2
         method: index
-        execution_time: 30
+        execution_time: 10
         inputs:
           method: random_images
           kwargs:
@@ -63,6 +63,24 @@ jobs:
           method: validate_images
           kwargs:
             top_k: 2
+        gateway_host: localhost
+        gateway_port: 23456
+        client: websocket
+        num_clients: 1
+        request_size: 5
+      - sleep_time: 2
+        method: index
+        execution_time: 10
+        inputs:
+          method: random_images
+          kwargs:
+            num_docs: 50
+        on_always:
+          method: validate_images
+          kwargs:
+            top_k: 2
+        gateway_host: localhost
+        gateway_port: 23456
         client: websocket
         num_clients: 1
         request_size: 5
@@ -79,10 +97,11 @@ jobs:
             num_docs: 10
         on_always:
           method: validate_images
-          kwargs:
-            top_k: 2
+        gateway_host: localhost
+        gateway_port: 23456
         client: websocket
         num_clients: 1
         request_size: 5
+        top_k: 15
       - method: terminate_flow
       - method: delete_workspace

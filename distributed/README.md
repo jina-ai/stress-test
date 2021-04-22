@@ -29,8 +29,11 @@
       - `inputs`: accepts a method name (data ingester). we can pass `kwargs` which are args for the data ingester method.
       - `on_always`: accepts a method name (data validator/metric logger). we can pass `kwargs` which are args for the data validator method.
       - `request_size`: request size for index/query
+      - `gateway_host`: flow gateway IP (default: localhost)
+      - `gateway_port`: flow gateway port (default: 23456)
       - `client`: `grpc` or `websockets` (pass according to flow gateway)
       - `num_clients`: number of concurrent clients (TODO)
+      - `top_k`: available for query only
 
     - `sleep_time` can be passed with any step to sleep before execution.
 

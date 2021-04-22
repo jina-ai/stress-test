@@ -1,4 +1,5 @@
 import os
+import json
 import random
 from enum import Enum
 from typing import Dict, List
@@ -7,27 +8,15 @@ from shutil import copyfile
 
 import chevron
 import numpy as np
-from jina import Document
+from jina import Document, Request
 from pydantic import FilePath
 from pydantic.decorator import validate_arguments
 
 from logger import logger, metric_logger
 
-__all__ = [
-    'random_images',
-    'random_texts',
-    'validate_images',
-    'validate_texts'
-]
-
 RENDER_DIR = '_rendered'
-DEFAULT_NUM_DOCS = 500
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
-FILE_PREFIX = 'stats'
-TOP_K = os.environ.get('TOP_K')
-FLOW_HOST = os.environ.get('FLOW_HOST')
-FLOW_PORT_GRPC = 45678
 
 _random_names = ('first', 'great', 'local', 'small', 'right', 'large', 'young', 'early', 'major', 'clear', 'black',
                  'whole', 'third', 'white', 'short', 'human', 'royal', 'wrong', 'legal', 'final', 'close', 'total',
@@ -63,7 +52,7 @@ def random_images(num_docs: int = 100):
         yield doc
 
 
-def random_texts(num_docs):
+def random_texts(num_docs: int = 100):
     for idx in range(num_docs):
         with Document() as doc:
             doc.text = random_sentences(random.randint(1, 20))
@@ -74,36 +63,41 @@ def random_texts(num_docs):
         yield doc
 
 
-def _log_time_per_pod(routes):
+def _log_time_per_pod(routes: List, state: Dict = {}, task: str = 'query'):
+    state[f'{task}_doc_counter'] = 1 if f'{task}_doc_counter' not in state else state[f'{task}_doc_counter'] + 1
     time_fmt = '%Y-%m-%dT%H:%M:%S.%fZ'
     time_per_pod = {
         i['pod']: (datetime.strptime(i['endTime'], time_fmt) -
                    datetime.strptime(i['startTime'], time_fmt)).total_seconds() * 1000
         for i in routes
     }
-    logger.info(time_per_pod)
+    logger.info(json.dumps({state[f'{task}_doc_counter']: time_per_pod}))
 
 
-def validate_images(resp, top_k):
-    _log_time_per_pod(resp.dict()['routes'][:-1])
+def validate_images(resp: Request, top_k: int = 10, task: str = 'query'):
+    from steps import StepItems
+    _log_time_per_pod(routes=resp.dict()['routes'][:-1],
+                      state=StepItems.state,
+                      task=task)
     for d in resp.search.docs:
         if len(d.matches) != top_k:
-            logger.error(f' MATCHES LENGTH IS NOT TOP_K {top_k} but {len(d.matches)}')
+            logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
         for m in d.matches:
             if 'filename' not in m.tags.keys():
                 logger.error(f'filename not in tags: {m.tags}')
             # to test that the data from the KV store is retrieved
             if 'image ' not in m.tags['filename']:
                 logger.error(f'"image" not in m.tags["filename"]: {m.tags["filename"]}')
-        # assert len(d.matches) == TOP_K, f'Number of actual matches: {len(d.matches)} vs expected number: {TOP_K}'
 
 
-def validate_texts(resp):
-    _log_time_per_pod(resp.dict()['routes'][:-1])
-    logger.info(f'got {len(resp.search.docs)} docs in resp.search')
+def validate_texts(resp: Request, top_k: int = 10, task: str = 'query'):
+    from steps import StepItems
+    _log_time_per_pod(resp.dict()['routes'][:-1],
+                      state=StepItems.state,
+                      task=task)
     for d in resp.search.docs:
-        if len(d.matches) != TOP_K:
-            logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {TOP_K}')
+        if len(d.matches) != top_k:
+            logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
         for m in d.matches:
             # to test that the data from the KV store is retrieved
             if 'filename' not in m.tags.keys():
