@@ -5,4 +5,5 @@ pyyaml
 chevron
 pydantic
 requests
+Pillow
 prettytable

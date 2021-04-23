@@ -1,3 +1,4 @@
+import itertools
 import os
 import json
 import time
@@ -20,6 +21,7 @@ LOGGERS = {}
 RENDER_DIR = '_rendered'
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
+SUPPORTED_IMAGE_SUFFIXES = ('.jpg', '.jpeg', '.png', '.gif')
 
 _random_names = ('first', 'great', 'local', 'small', 'right', 'large', 'young', 'early', 'major', 'clear', 'black',
                  'whole', 'third', 'white', 'short', 'human', 'royal', 'wrong', 'legal', 'final', 'close', 'total',
@@ -59,6 +61,25 @@ def random_images(num_docs: int = 100):
             doc.tags['filename'] = f'image {idx}'
             doc.tags['timestamp'] = str(time.time())
         yield doc
+
+
+def dataset_images(dataset_path: str, num_docs: int = 100):
+    from steps import StepItems
+    from PIL import Image
+
+    ds_image_state_key = f'ds_image_{dataset_path}'
+    if ds_image_state_key not in StepItems.state:
+        StepItems.state[ds_image_state_key] = os.scandir(dataset_path)
+    files = StepItems.state[ds_image_state_key]
+
+    for file in itertools.islice(files, num_docs):
+        if file.is_file() and Path(file.path).suffix.lower() in SUPPORTED_IMAGE_SUFFIXES:
+            with Document() as doc:
+                img = Image.open(file.path)
+                doc.content = np.array(img)
+                doc.mime_type = img.get_format_mimetype()
+                doc.tags['filename'] = file.name
+            yield doc
 
 
 def random_texts(num_docs: int = 100):
