@@ -33,3 +33,4 @@ class S3:
             self._client.download_file(self._bucket, key, local_path)
         except Exception as exp:
             logger.error(f'Got following exception while downloading object from S3 \n{exp}')
+            raise
