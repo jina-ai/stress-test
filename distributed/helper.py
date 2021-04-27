@@ -1,18 +1,18 @@
 import os
 import json
+import time
 import random
 from enum import Enum
+from shutil import copyfile
 from typing import Dict, List
 from datetime import datetime
-from shutil import copyfile
 
 import chevron
 import numpy as np
 from jina import Document, Request
-from pydantic import FilePath
-from pydantic.decorator import validate_arguments
+from pydantic import FilePath, validate_arguments
 
-from logger import logger, metric_logger
+from logger import logger
 
 RENDER_DIR = '_rendered'
 IMG_HEIGHT = 224
@@ -49,6 +49,7 @@ def random_images(num_docs: int = 100):
             doc.content = create_random_img_array(IMG_HEIGHT, IMG_WIDTH)
             doc.mime_type = 'image/png'
             doc.tags['filename'] = f'image {idx}'
+            doc.tags['timestamp'] = str(time.time())
         yield doc
 
 
@@ -57,32 +58,50 @@ def random_texts(num_docs: int = 100):
         with Document() as doc:
             doc.text = random_sentences(random.randint(1, 20))
             doc.tags['filename'] = f'filename {idx}'
+            doc.tags['timestamp'] = str(time.time())
             num_chunks = random.randint(1, 10)
             for _ in range(num_chunks):
                 doc.text += '. ' + random_sentences(random.randint(1, 20))
         yield doc
 
 
-def _log_time_per_pod(routes: List, state: Dict = {}, task: str = 'query'):
+def _log_time_per_pod(routes: List,
+                      timestamp: float,
+                      state: Dict = {},
+                      task: str = 'search',
+                      **kwargs):
+    from logger import p2p_metrics_logger
     state[f'{task}_doc_counter'] = 1 if f'{task}_doc_counter' not in state else state[f'{task}_doc_counter'] + 1
-    time_fmt = '%Y-%m-%dT%H:%M:%S.%fZ'
-    time_per_pod = {
-        i['pod']: (datetime.strptime(i['endTime'], time_fmt) -
-                   datetime.strptime(i['startTime'], time_fmt)).total_seconds() * 1000
-        for i in routes
-    }
-    logger.info(json.dumps({state[f'{task}_doc_counter']: time_per_pod}))
+
+    def _time_diff_ms(start, end):
+        _time_fmt = '%Y-%m-%dT%H:%M:%S.%fZ'
+        return (datetime.strptime(end, _time_fmt) - datetime.strptime(start, _time_fmt)).total_seconds() * 1000
+
+    time_per_pod = {i['pod']: f'{_time_diff_ms(i["startTime"], i["endTime"]):.0f}' for i in routes}
+    p2p_metrics_logger.info(json.dumps(
+        {'task': task,
+         'doc_count': state[f'{task}_doc_counter'],
+         **kwargs,
+         'client_roundtrip': f'{(time.time() - timestamp) * 1000:.0f}',
+         **time_per_pod}
+    ))
 
 
-def validate_images(resp: Request, top_k: int = 10, task: str = 'query'):
+def validate_images(resp: Request, top_k: int = 10, **kwargs):
     from steps import StepItems
+    task = 'index' if 'index' in resp.dict().keys() else 'search'
+    timestamp_from_tags = float(resp.dict()[task]['docs'][0]['tags']['timestamp'])
     _log_time_per_pod(routes=resp.dict()['routes'][:-1],
+                      timestamp=timestamp_from_tags,
                       state=StepItems.state,
-                      task=task)
+                      task=task, **kwargs)
+
     for d in resp.search.docs:
         if len(d.matches) != top_k:
             logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
         for m in d.matches:
+            if 'timestamp' not in m.tags.keys():
+                logger.error(f'timestampe not in tags: {m.tags}')
             if 'filename' not in m.tags.keys():
                 logger.error(f'filename not in tags: {m.tags}')
             # to test that the data from the KV store is retrieved
@@ -90,11 +109,15 @@ def validate_images(resp: Request, top_k: int = 10, task: str = 'query'):
                 logger.error(f'"image" not in m.tags["filename"]: {m.tags["filename"]}')
 
 
-def validate_texts(resp: Request, top_k: int = 10, task: str = 'query'):
+def validate_texts(resp: Request, top_k: int = 10, **kwargs):
     from steps import StepItems
-    _log_time_per_pod(resp.dict()['routes'][:-1],
+    task = 'index' if 'index' in resp.dict().keys() else 'search'
+    timestamp_from_tags = float(resp.dict()[task]['docs'][0]['tags']['timestamp'])
+    _log_time_per_pod(routes=resp.dict()['routes'][:-1],
+                      timestamp=timestamp_from_tags,
                       state=StepItems.state,
-                      task=task)
+                      task=task, **kwargs)
+
     for d in resp.search.docs:
         if len(d.matches) != top_k:
             logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')

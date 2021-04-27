@@ -1,6 +1,8 @@
 import time
 import yaml
 import copy
+import argparse
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 from pydantic import ValidationError
@@ -87,8 +89,8 @@ class Job:
                 raise
 
 
-def main():
-    with open('settings.yaml') as f:
+def main(config):
+    with open(config) as f:
         settings = yaml.safe_load(f)
 
     if 'jobs' not in settings:
@@ -103,4 +105,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', default='settings.yaml')
+    args = parser.parse_args()
+    if not Path(args.config).is_file():
+        raise FileNotFoundError(f'{args.config} file is missing, please pass an existing filepath')
+    main(args.config)

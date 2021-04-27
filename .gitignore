@@ -135,3 +135,7 @@ shell/jina-wizard.sh
 
 # Parquet file for benchmark
 docs_*.parquet
+
+# Log folder written by logger
+_logs/
+_rendered/

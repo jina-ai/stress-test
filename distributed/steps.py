@@ -1,9 +1,11 @@
 import uuid
 from typing import List, Dict, Callable, ClassVar
 from pydantic import validate_arguments, FilePath
+from pydantic.types import DirectoryPath
 
 import data
 import control
+from aws import S3
 from helper import set_environment_vars, GatewayClients
 
 
@@ -103,3 +105,20 @@ class StepItems:
                    num_clients=num_clients,
                    request_size=request_size,
                    top_k=top_k)
+
+    @classmethod
+    @validate_arguments
+    def upload_to_s3(cls,
+                     *,
+                     directory: DirectoryPath,
+                     bucket: str = 'e2e-distributed-stress-tests'):
+        S3(bucket=bucket).add(path=directory, key=str(uuid.uuid4()))
+
+    @classmethod
+    @validate_arguments
+    def download_from_s3(cls,
+                         *,
+                         key: str,
+                         local_directory: str = '.',
+                         bucket: str = 'e2e-distributed-stress-tests'):
+        S3(bucket=bucket).get(key=key, local_directory=local_directory)
