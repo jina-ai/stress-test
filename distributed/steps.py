@@ -121,4 +121,4 @@ class StepItems:
                          key: str,
                          local_directory: str = '.',
                          bucket: str = 'e2e-distributed-stress-tests'):
-        S3(bucket=bucket).get(key=key, local_directory=local_directory)
+        S3(bucket=bucket).get(key=key, local_path=f'{local_directory}/{key}')

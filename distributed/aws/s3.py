@@ -25,10 +25,10 @@ class S3:
         except Exception as exp:
             logger.exception(f'Got following exception while uploading object to S3 \n{exp}')
 
-    def get(self, key: str, local_path: str = '.'):
+    def get(self, key: str, local_path):
         try:
-            logger.info(f'Downloading object from `{self._bucket}:{key}` to local directory: {local_path}')
+            logger.info(f'Downloading object from `{self._bucket}:{key}` to file: {local_path}')
             # for filename in glob.iglob(path + '**/**', recursive=True):
             self._client.download_file(self._bucket, key, local_path)
         except Exception as exp:
-            logger.error(f'Got following exception while uploading object to S3 \n{exp}')
+            logger.error(f'Got following exception while downloading object from S3 \n{exp}')
