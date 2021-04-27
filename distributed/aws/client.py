@@ -39,3 +39,4 @@ class AWSClient:
             self._waiter = self.client.get_waiter(waiter_name=waiter_name)
         except Exception as exp:
             logger.exception(f'Got the following exception while getting the waiter {exp}')
+            raise
