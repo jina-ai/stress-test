@@ -5,6 +5,7 @@ import yaml
 if len(sys.argv) < 2:
     raise Exception('IPs are not passed')
 
+print(sys.argv[1])
 e2e_ip_dict = json.loads(sys.argv[1].strip("\"").replace('\\', ''))
 e2e_ip_final = {'instances': {}}
 
