@@ -1,0 +1,5 @@
+jobs:
+  images-stress-test:
+    steps:
+      - method: upload_to_s3
+        directory: '_logs'

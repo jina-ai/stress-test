@@ -5,7 +5,7 @@ from contextlib import ExitStack
 import requests
 from pydantic import FilePath, UUID4
 
-from logger import logger, metric_logger
+from logger import logger
 from helper import RENDER_DIR
 
 FLOW_PROTO = 'http'

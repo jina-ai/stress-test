@@ -2,3 +2,4 @@ jina[http]
 pydantic
 pyyaml
 chevron
+boto3

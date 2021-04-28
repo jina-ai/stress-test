@@ -2,8 +2,8 @@ import time
 from functools import partial
 from typing import Dict, Callable
 
-from jina.clients import Client, WebSocketClient
 from jina.parsers import set_client_cli_parser
+from jina.clients import Client, WebSocketClient
 from pydantic import validate_arguments
 
 from logger import logger
@@ -30,10 +30,10 @@ def index(*,
     # TODO: add support for multiple clients
     logger.info(f'👍 Starting indexing for {execution_time} secs')
     run_until = time.time() + execution_time
+    on_always_args.update({'client': client.value})
     client = _fetch_client(client=client,
                            gateway_host=gateway_host,
                            gateway_port=gateway_port)
-    on_always_args.update({'task': 'index'})
     while time.time() < run_until:
         client.index(inputs(**inputs_args),
                      request_size=request_size,
@@ -56,10 +56,10 @@ def query(*,
     # TODO: add support for multiple clients
     logger.info(f'👍 Starting querying for {execution_time} secs')
     run_until = time.time() + execution_time
+    on_always_args.update({'top_k': top_k, 'client': client.value})
     client = _fetch_client(client=client,
                            gateway_host=gateway_host,
                            gateway_port=gateway_port)
-    on_always_args.update({'top_k': top_k, 'task': 'query'})
     while time.time() < run_until:
         client.search(inputs(**inputs_args),
                       request_size=request_size,
