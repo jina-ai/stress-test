@@ -16,6 +16,8 @@
    - terminate_flow
    - index
    - query
+   - upload_to_s3
+   - download_from_s3
 
 1. Each method accepts a set of kwargs (according to function definition in steps).
    Points to note -
