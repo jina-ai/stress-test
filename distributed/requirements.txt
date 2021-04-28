@@ -3,3 +3,4 @@ pydantic
 pyyaml
 chevron
 boto3
+requests
