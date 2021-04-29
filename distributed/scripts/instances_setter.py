@@ -1,12 +1,11 @@
-import sys
-import json
 import yaml
 
-if len(sys.argv) < 2:
-    raise Exception('IPs are not passed')
+try:
+    with open('_instances.yaml') as f:
+        e2e_ip_dict = yaml.safe_load(f)
+except FileNotFoundError:
+    raise Exception('Please make sure the previous step has created the instances.yaml file')
 
-print(sys.argv[1])
-e2e_ip_dict = json.loads(sys.argv[1].strip("\"").replace('\\', ''))
 e2e_ip_final = {'instances': {}}
 
 for k, v in e2e_ip_dict.items():
