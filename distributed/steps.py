@@ -6,7 +6,7 @@ from pydantic.types import DirectoryPath
 import data
 import control
 from aws import S3
-from helper import set_environment_vars, GatewayClients
+from helper import update_environment_vars, GatewayClients
 
 
 class StepItems:
@@ -20,7 +20,7 @@ class StepItems:
                          *,
                          files: List[FilePath],
                          environment: Dict[str, str]):
-        set_environment_vars(files=files, environment=environment)
+        update_environment_vars(files=files, environment=environment)
         StepItems.workspace = control.create_or_update_workspace(files=files)
 
     @classmethod
@@ -29,7 +29,7 @@ class StepItems:
                          *,
                          files: List[FilePath],
                          environment: Dict[str, str]):
-        set_environment_vars(files=files, environment=environment)
+        update_environment_vars(files=files, environment=environment)
         StepItems.workspace = control.create_or_update_workspace(files=files,
                                                                  workspace_id=StepItems.workspace)
 
@@ -62,8 +62,6 @@ class StepItems:
               inputs_args: Dict,
               on_always: Callable,
               on_always_args: Dict = {},
-              gateway_host: str = 'localhost',
-              gateway_port: int = 23456,
               client: GatewayClients = GatewayClients.GRPC,
               num_clients: int = 1,
               request_size: int = 100,
@@ -72,8 +70,6 @@ class StepItems:
                    inputs_args=inputs_args,
                    on_always=on_always,
                    on_always_args=on_always_args,
-                   gateway_host=gateway_host,
-                   gateway_port=gateway_port,
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,
@@ -98,8 +94,6 @@ class StepItems:
                    inputs_args=inputs_args,
                    on_always=on_always,
                    on_always_args=on_always_args,
-                   gateway_host=gateway_host,
-                   gateway_port=gateway_port,
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,

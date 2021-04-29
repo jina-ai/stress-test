@@ -3,10 +3,12 @@ import json
 import time
 import random
 from enum import Enum
+from pathlib import Path
 from shutil import copyfile
 from typing import Dict, List
 from datetime import datetime
 
+import yaml
 import chevron
 import numpy as np
 from jina import Document, Request
@@ -77,7 +79,8 @@ def _log_time_per_pod(routes: List,
         _time_fmt = '%Y-%m-%dT%H:%M:%S.%fZ'
         return (datetime.strptime(end, _time_fmt) - datetime.strptime(start, _time_fmt)).total_seconds() * 1000
 
-    time_per_pod = {i['pod']: f'{_time_diff_ms(i["startTime"], i["endTime"]):.0f}' for i in routes}
+    logger.info(routes)
+    time_per_pod = {i['pod']: f'{_time_diff_ms(i["start_time"], i["end_time"]):.0f}' for i in routes if 'end_time' in i}
     p2p_metrics_logger.info(json.dumps(
         {'task': task,
          'doc_count': state[f'{task}_doc_counter'],
@@ -91,7 +94,7 @@ def validate_images(resp: Request, top_k: int = 10, **kwargs):
     from steps import StepItems
     task = 'index' if 'index' in resp.dict().keys() else 'search'
     timestamp_from_tags = float(resp.dict()[task]['docs'][0]['tags']['timestamp'])
-    _log_time_per_pod(routes=resp.dict()['routes'][:-1],
+    _log_time_per_pod(routes=resp.dict()['routes'],
                       timestamp=timestamp_from_tags,
                       state=StepItems.state,
                       task=task, **kwargs)
@@ -128,10 +131,25 @@ def validate_texts(resp: Request, top_k: int = 10, **kwargs):
 
 
 @validate_arguments
-def set_environment_vars(files: List[FilePath], environment: Dict[str, str]):
+def update_environment_vars(files: List[FilePath], environment: Dict[str, str]):
+    update_instances_environment_vars(environment=environment)
+    set_os_environment_vars(environment=environment)
     os.makedirs(RENDER_DIR, exist_ok=True)
     for file in files:
         copyfile(file, f'{RENDER_DIR}/{file.name}')
         with open(file, 'r') as org_file, open(f'{RENDER_DIR}/{file.name}', 'w') as rendered_file:
             content_to_be_rendered = chevron.render(org_file, environment)
             rendered_file.write(content_to_be_rendered)
+
+
+def set_os_environment_vars(environment: Dict[str, str]):
+    for k, v in environment.items():
+        os.environ[k] = str(v)
+
+
+def update_instances_environment_vars(environment: Dict[str, str]):
+    if Path('instances.yaml').is_file():
+        with open('instances.yaml') as f:
+            host_env = yaml.safe_load(f)
+            if 'instances' in host_env:
+                environment.update(host_env['instances'])

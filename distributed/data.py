@@ -1,3 +1,4 @@
+import os
 import time
 from functools import partial
 from typing import Dict, Callable
@@ -10,8 +11,10 @@ from logger import logger
 from helper import GatewayClients
 
 
-def _fetch_client(client: GatewayClients, gateway_host: str, gateway_port: int):
-    args = set_client_cli_parser().parse_args(['--host', gateway_host, '--port-expose', str(gateway_port)])
+def _fetch_client(client: GatewayClients):
+    gateway_data_host = f'{os.getenv("JINA_GATEWAY_HOST") if os.getenv("JINA_GATEWAY_HOST") else "localhost"}'
+    gateway_data_port = f'{os.getenv("JINA_GATEWAY_PORT_EXPOSE") if os.getenv("JINA_GATEWAY_PORT_EXPOSE") else "23456"}'
+    args = set_client_cli_parser().parse_args(['--host', gateway_data_host, '--port-expose', str(gateway_data_port)])
     return Client(args) if client == GatewayClients.GRPC else WebSocketClient(args)
 
 
@@ -21,8 +24,6 @@ def index(*,
           inputs_args: Dict,
           on_always: Callable,
           on_always_args: Dict = {},
-          gateway_host: str = 'localhost',
-          gateway_port: int = 23456,
           client: GatewayClients = 'grpc',
           num_clients: int = 1,
           request_size: int = 100,
@@ -31,9 +32,7 @@ def index(*,
     logger.info(f'👍 Starting indexing for {execution_time} secs')
     run_until = time.time() + execution_time
     on_always_args.update({'client': client.value})
-    client = _fetch_client(client=client,
-                           gateway_host=gateway_host,
-                           gateway_port=gateway_port)
+    client = _fetch_client(client=client)
     while time.time() < run_until:
         client.index(inputs(**inputs_args),
                      request_size=request_size,
@@ -46,8 +45,6 @@ def query(*,
           inputs_args: Dict,
           on_always: Callable,
           on_always_args: Dict = {},
-          gateway_host: str = 'localhost',
-          gateway_port: int = 23456,
           client: GatewayClients = 'grpc',
           execution_time: int = 10,
           num_clients: int = 1,
@@ -57,9 +54,7 @@ def query(*,
     logger.info(f'👍 Starting querying for {execution_time} secs')
     run_until = time.time() + execution_time
     on_always_args.update({'top_k': top_k, 'client': client.value})
-    client = _fetch_client(client=client,
-                           gateway_host=gateway_host,
-                           gateway_port=gateway_port)
+    client = _fetch_client(client=client)
     while time.time() < run_until:
         client.search(inputs(**inputs_args),
                       request_size=request_size,

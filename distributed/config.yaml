@@ -8,7 +8,7 @@ jobs:
         #  If you have a Flow yaml that needs env var replacement, pass it here.
         environment:
           JINA_GATEWAY_REST: true
-          JINA_GATEWAY_PORT: 23456
+          JINA_GATEWAY_PORT_EXPOSE: 23456
           JINA_ENCODER_SHARDS: 2
           JINA_VEC_INDEXER_SHARDS: 2
           JINA_KV_INDEXER_SHARDS: 1
@@ -22,12 +22,6 @@ jobs:
           JINA_FAISS_IMAGE: docker://jinahub/pod.indexer.faissindexer:0.0.15-1.0.0
           JINA_FAISS_INDEX_KEY: IVF50,Flat
           JINA_WORKSPACE: workspace
-          JINA_ENCODER_HOST: 18.211.189.155
-          JINA_ENCODER_PORT: 8000
-          JINA_VEC_INDEXER_HOST: 52.1.160.149
-          JINA_VEC_INDEXER_PORT: 8000
-          JINA_KV_INDEXER_HOST: 54.163.135.15
-          JINA_KV_INDEXER_PORT: 8000
         files:
           - images/redis.yml
           - images/annoy_indexer.yml
@@ -74,8 +68,6 @@ jobs:
           # Pass the args to your `on_always` method
           kwargs:
             top_k: 2
-        gateway_host: localhost
-        gateway_port: 23456
         # client can be `websocket` or `grpc`
         client: websocket
         num_clients: 1
@@ -95,8 +87,6 @@ jobs:
             num_docs: 10
         on_always:
           method: validate_images
-        gateway_host: localhost
-        gateway_port: 23456
         client: websocket
         num_clients: 1
         request_size: 5
