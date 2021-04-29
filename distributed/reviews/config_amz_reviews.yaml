@@ -1,0 +1,64 @@
+jobs:
+  reviews-stress-test:
+    steps:
+      - method: create_workspace
+        environment:
+          JINA_GATEWAY_REST: true
+          JINA_GATEWAY_PORT: 23456
+          JINA_ENCODER_SHARDS: 2
+          JINA_VEC_INDEXER_SHARDS: 2
+          JINA_KV_INDEXER_SHARDS: 1
+          JINA_SCHEDULING: load_balance
+          JINA_WORKSPACE: workspace
+        files:
+          - reviews/encoder.yml
+          - reviews/chunk_indexer.yml
+          - reviews/segment.yml
+          - reviews/segmenters.py
+          - reviews/index.yml
+          - reviews/query.yml
+          - reviews/chunk_merger.yml
+          - reviews/doc.yml
+          - reviews/ranker.yml
+
+      - method: start_flow
+        file: reviews/index.yml
+      - sleep_time: 2
+        method: index
+        execution_time: 60
+        inputs:
+          method: amazon_reviews
+          kwargs:
+            dataset_path: ./reviews.csv
+            num_docs: 100
+        on_always:
+          method: validate_texts
+          kwargs:
+            top_k: 2
+        gateway_host: localhost
+        gateway_port: 23456
+        client: websocket
+        num_clients: 1
+        request_size: 30
+      - method: terminate_flow
+
+      - method: start_flow
+        file: reviews/query.yml
+      - sleep_time: 1
+        method: query
+        execution_time: 60
+        inputs:
+          method: amazon_reviews
+          kwargs:
+            dataset_path: ./reviews.csv
+            num_docs: 10
+        on_always:
+          method: validate_texts
+        gateway_host: localhost
+        gateway_port: 23456
+        client: websocket
+        num_clients: 1
+        request_size: 10
+        top_k: 15
+      - method: terminate_flow
+      - method: delete_workspace

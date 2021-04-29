@@ -106,7 +106,7 @@ def main(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='config.yaml')
+    parser.add_argument('--config', default='settings_reviews.yaml')
     args = parser.parse_args()
     if not Path(args.config).is_file():
         raise FileNotFoundError(f'{args.config} file is missing, please pass an existing filepath')

@@ -1,6 +1,8 @@
+import csv
 import itertools
 import os
 import json
+import shutil
 import time
 import random
 from enum import Enum
@@ -13,6 +15,7 @@ import yaml
 import chevron
 import numpy as np
 from jina import Document, Request
+from jinacld_tools.aws.services.s3 import S3Bucket
 from pydantic import FilePath, validate_arguments
 
 from logger import logger
@@ -80,6 +83,33 @@ def dataset_images(dataset_path: str, num_docs: int = 100):
                 doc.mime_type = img.get_format_mimetype()
                 doc.tags['filename'] = file.name
             yield doc
+
+
+def amazon_reviews(dataset_path: str, num_docs: int = 100):
+    from steps import StepItems
+
+    # Try to download reviews if they dont exist yet
+    if not os.path.isfile(path=dataset_path):
+        S3Bucket(bucket_name='jina-examples-datasets').get(key='amazon_reviews.zip', local_path='./reviews.zip')
+        shutil.unpack_archive('./reviews.zip')
+        os.remove('./reviews.zip')
+        default_data_set_path = './reviews.csv'
+        if dataset_path != default_data_set_path:
+            shutil.move('./reviews.csv', default_data_set_path)
+    ds_reviews_state_key = f'ds_reviews_{dataset_path}'
+    if ds_reviews_state_key not in StepItems.state:
+        f = open(dataset_path, newline='', encoding='utf-8')
+        StepItems.state[ds_reviews_state_key] = csv.reader(f)
+    reader = StepItems.state[ds_reviews_state_key]
+
+
+    for row in itertools.islice(reader, num_docs):
+        with Document() as doc:
+            doc.text = row[2]
+            doc.tags['title'] = row[1]
+            doc.tags['stars'] = int(row[0])
+            doc.tags['timestamp'] = str(time.time())
+        yield doc
 
 
 def random_texts(num_docs: int = 100):
