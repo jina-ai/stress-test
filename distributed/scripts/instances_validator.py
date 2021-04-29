@@ -24,9 +24,10 @@ while time.time() < check_until and sum(e2e_ip_validate.values()) != len(e2e_ip_
     for instance_name, ip in e2e_ip_dict.items():
         try:
             e2e_ip_validate[ip] = True \
-                if requests.get(f'http://{ip}:8000').status_code == requests.codes.ok \
+                if requests.get(f'http://{ip}:8000', timeout=5).status_code == requests.codes.ok \
                 else False
         except requests.ConnectionError:
+            print(f'Timeout for {instance_name}:{ip}')
             e2e_ip_validate[ip] = False
     print(f'Current status: {e2e_ip_validate}')
 
