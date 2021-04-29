@@ -21,6 +21,8 @@ for instance_name in e2e_ip_dict.copy().keys():
 
 
 while time.time() < check_until and sum(e2e_ip_validate.values()) != len(e2e_ip_dict):
+    print(f'Sleeping for 2 secs')
+    time.sleep(2)
     for instance_name, ip in e2e_ip_dict.items():
         try:
             e2e_ip_validate[ip] = True \
