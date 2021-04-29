@@ -1,26 +1,33 @@
 import sys
 import time
-import json
 import requests
 
-if len(sys.argv) < 2:
-    raise Exception('IPs are not passed')
+import yaml
+
+try:
+    with open('_instances.yaml') as f:
+        e2e_ip_dict = yaml.safe_load(f)
+except FileNotFoundError:
+    raise Exception('Please make sure the previous step has created the instances.yaml file')
 
 total_time_to_wait = 120
 init_time = time.time()
 check_until = init_time + total_time_to_wait
-
-e2e_ip_dict = json.loads(sys.argv[1].strip("\"").replace('\\', ''))
 e2e_ip_validate = {}
 
+for instance_name in e2e_ip_dict.copy().keys():
+    if 'client' in instance_name.lower():
+        e2e_ip_dict.pop(instance_name)
+
+
 while time.time() < check_until and sum(e2e_ip_validate.values()) != len(e2e_ip_dict):
-    for jinad_ip in e2e_ip_dict.values():
+    for instance_name, ip in e2e_ip_dict.items():
         try:
-            e2e_ip_validate[jinad_ip] = True \
-                if requests.get(f'http://{jinad_ip}:8000').status_code == requests.codes.ok \
+            e2e_ip_validate[ip] = True \
+                if requests.get(f'http://{ip}:8000').status_code == requests.codes.ok \
                 else False
         except requests.ConnectionError:
-            e2e_ip_validate[jinad_ip] = False
+            e2e_ip_validate[ip] = False
     print(f'Current status: {e2e_ip_validate}')
 
 
