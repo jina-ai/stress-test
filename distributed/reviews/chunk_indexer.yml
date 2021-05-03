@@ -5,12 +5,12 @@ components:
       index_filename: vec.gz
       metric: euclidean
     metas:
-      name: vecidx  # a customized name
+      name: vecidx
   - !BinaryPbIndexer
     with:
       index_filename: chunk.gz
     metas:
-      name: chunkidx  # a customized name
+      name: chunkidx
 metas:
   name: chunk_compound_indexer
   workspace: ./workspace

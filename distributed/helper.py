@@ -102,7 +102,6 @@ def amazon_reviews(dataset_path: str, num_docs: int = 100):
         StepItems.state[ds_reviews_state_key] = csv.reader(f)
     reader = StepItems.state[ds_reviews_state_key]
 
-
     for row in itertools.islice(reader, num_docs):
         with Document() as doc:
             doc.text = row[2]
