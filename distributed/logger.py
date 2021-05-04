@@ -31,4 +31,3 @@ def get_logger(context='trigger'):
 
 
 logger = get_logger(context='trigger')
-p2p_metrics_logger = get_logger(context='p2p')  # means pod2pod

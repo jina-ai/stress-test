@@ -1,6 +1,7 @@
 import os
 import time
 from functools import partial
+from multiprocessing import Pool
 from typing import Dict, Callable
 
 from jina.parsers import set_client_cli_parser
@@ -8,7 +9,7 @@ from jina.clients import Client, WebSocketClient
 from pydantic import validate_arguments
 
 from logger import logger
-from helper import GatewayClients
+from helper import GatewayClients, Tasks
 
 
 def _fetch_client(client: GatewayClients):
@@ -17,10 +18,25 @@ def _fetch_client(client: GatewayClients):
     args = set_client_cli_parser().parse_args(['--host', gateway_data_host, '--port-expose', str(gateway_data_port)])
     return Client(args) if client == GatewayClients.GRPC else WebSocketClient(args)
 
+def _trigger(task: Tasks, client: GatewayClients, execution_time: float,
+             inputs: Callable, inputs_args: Dict, request_size: int, on_always: Callable, on_always_args: Dict):
+    run_until = time.time() + execution_time
+    client = _fetch_client(client=client)
+    while time.time() < run_until:
+        getattr(client, task)(
+            inputs(**inputs_args),
+            request_size=request_size,
+            on_always=partial(on_always, **on_always_args)
+        )
+
+def _handle_clients(num_clients, *args):
+    with Pool(num_clients) as pool:
+        results = [pool.apply_async(_trigger, args=args) for _ in range(num_clients)]
+        [r.get() for r in results]
+
 
 @validate_arguments
-def index(*,
-          inputs: Callable,
+def index(inputs: Callable,
           inputs_args: Dict,
           on_always: Callable,
           on_always_args: Dict = {},
@@ -28,15 +44,10 @@ def index(*,
           num_clients: int = 1,
           request_size: int = 100,
           execution_time: int = 10):
-    # TODO: add support for multiple clients
     logger.info(f'👍 Starting indexing for {execution_time} secs')
-    run_until = time.time() + execution_time
     on_always_args.update({'client': client.value})
-    client = _fetch_client(client=client)
-    while time.time() < run_until:
-        client.index(inputs(**inputs_args),
-                     request_size=request_size,
-                     on_always=partial(on_always, **on_always_args))
+    _handle_clients(num_clients, 'index', client, execution_time, inputs,
+                    inputs_args, request_size, on_always, on_always_args)
 
 
 @validate_arguments
@@ -50,13 +61,7 @@ def query(*,
           num_clients: int = 1,
           request_size: int = 100,
           top_k: int = 10):
-    # TODO: add support for multiple clients
     logger.info(f'👍 Starting querying for {execution_time} secs')
-    run_until = time.time() + execution_time
     on_always_args.update({'top_k': top_k, 'client': client.value})
-    client = _fetch_client(client=client)
-    while time.time() < run_until:
-        client.search(inputs(**inputs_args),
-                      request_size=request_size,
-                      top_k=top_k,
-                      on_always=partial(on_always, **on_always_args))
+    _handle_clients(num_clients, 'search', client, execution_time, inputs,
+                    inputs_args, request_size, on_always, on_always_args)

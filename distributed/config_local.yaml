@@ -29,18 +29,18 @@ jobs:
         file: images/local/index_numpy_binarypb.yml
       - sleep_time: 2
         method: index
-        execution_time: 40
+        execution_time: 10
         inputs:
           method: random_images
           kwargs:
-            num_docs: 1
+            num_docs: 10
         on_always:
           method: validate_images
           kwargs:
-            top_k: 2
+            type: 'numpy+binarypb'
         client: grpc
-        num_clients: 1
-        request_size: 5
+        num_clients: 2
+        request_size: 100
       - method: terminate_flow
 
       # Query using numpy + binarypb
@@ -52,13 +52,15 @@ jobs:
         inputs:
           method: random_images
           kwargs:
-            num_docs: 1
+            num_docs: 5
         on_always:
           method: validate_images
+          kwargs:
+            top_k: 5
+            type: 'numpy+binarypb'
         client: grpc
-        num_clients: 1
-        request_size: 5
-        top_k: 5
+        num_clients: 2
+        request_size: 100
       - method: terminate_flow
 
       # Query using annoy + binarypb
@@ -72,6 +74,7 @@ jobs:
           JINA_GATEWAY_PORT_EXPOSE: 23456
         files:
           - images/local/query_annoy_binarypb.yml
+          - images/annoy_indexer.yml
       - method: start_flow
         file: images/local/query_annoy_binarypb.yml
       - sleep_time: 1
@@ -97,6 +100,7 @@ jobs:
           JINA_GATEWAY_REST: false
           JINA_GATEWAY_PORT_EXPOSE: 23456
         files:
+          - images/faiss_indexer.yml
           - images/local/query_faiss_binarypb.yml
       - method: start_flow
         file: images/local/query_faiss_binarypb.yml
@@ -117,6 +121,6 @@ jobs:
 
       - method: delete_workspace
 
-      - method: upload_to_s3
-        directory: '_logs'
-        bucket: 'e2e-distributed-stress-tests'
+      # - method: upload_to_s3
+      #   directory: '_logs'
+      #   bucket: 'e2e-distributed-stress-tests'

@@ -83,12 +83,9 @@ class StepItems:
               inputs_args: Dict,
               on_always: Callable,
               on_always_args: Dict = {},
-              gateway_host: str = 'localhost',
-              gateway_port: int = 23456,
               client: GatewayClients = GatewayClients.GRPC,
               num_clients: int = 1,
               request_size: int = 100,
-              top_k: int = 50,
               execution_time: int = 10):
         data.query(inputs=inputs,
                    inputs_args=inputs_args,
@@ -97,8 +94,7 @@ class StepItems:
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,
-                   request_size=request_size,
-                   top_k=top_k)
+                   request_size=request_size)
 
     @classmethod
     @validate_arguments
