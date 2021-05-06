@@ -108,48 +108,54 @@ def _log_time_per_pod(routes: List,
 
 
 def validate_images(resp: Request, top_k: int = 10, **kwargs):
-    from steps import StepItems
-    resp_dict = resp.dict()
-    task = 'index' if 'index' in resp_dict.keys() else 'search'
-    timestamp_from_tags = np.mean([float(doc['tags']['timestamp']) for doc in resp_dict[task]['docs']])
-    _log_time_per_pod(routes=resp_dict['routes'],
-                      timestamp=timestamp_from_tags,
-                      state=StepItems.state,
-                      task=task,
-                      num_docs=len(resp_dict[task]['docs']), **kwargs)
-    for d in resp.search.docs:
-        if len(d.matches) != top_k:
-            logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
-        for m in d.matches:
-            if 'timestamp' not in m.tags.keys():
-                logger.error(f'timestamp not in tags: {m.tags}')
-            if 'filename' not in m.tags.keys():
-                logger.error(f'filename not in tags: {m.tags}')
-            # to test that the data from the KV store is retrieved
-            if 'image ' not in m.tags['filename']:
-                logger.error(f'"image" not in m.tags["filename"]: {m.tags["filename"]}')
+    try:
+        from steps import StepItems
+        resp_dict = resp.dict()
+        task = 'index' if 'index' in resp_dict.keys() else 'search'
+        timestamp_from_tags = np.mean([float(doc['tags']['timestamp']) for doc in resp_dict[task]['docs']])
+        _log_time_per_pod(routes=resp_dict['routes'],
+                          timestamp=timestamp_from_tags,
+                          state=StepItems.state,
+                          task=task,
+                          num_docs=len(resp_dict[task]['docs']), **kwargs)
+        for d in resp.search.docs:
+            if len(d.matches) != top_k:
+                logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
+            for m in d.matches:
+                if 'timestamp' not in m.tags.keys():
+                    logger.error(f'timestamp not in tags: {m.tags}')
+                if 'filename' not in m.tags.keys():
+                    logger.error(f'filename not in tags: {m.tags}')
+                # to test that the data from the KV store is retrieved
+                if 'image ' not in m.tags['filename']:
+                    logger.error(f'"image" not in m.tags["filename"]: {m.tags["filename"]}')
+    except Exception as e:
+        logger.exception(f'Got an exception during `validate_images`. Continuing (not raising)')
 
 
 def validate_texts(resp: Request, top_k: int = 10, **kwargs):
-    from steps import StepItems
-    resp_dict = resp.dict()
-    task = 'index' if 'index' in resp_dict.keys() else 'search'
-    timestamp_from_tags = float(resp_dict[task]['docs'][0]['tags']['timestamp'])
-    _log_time_per_pod(routes=resp_dict['routes'],
-                      timestamp=timestamp_from_tags,
-                      state=StepItems.state,
-                      task=task,
-                      num_docs=len(resp_dict[task]['docs']), **kwargs)
+    try:
+        from steps import StepItems
+        resp_dict = resp.dict()
+        task = 'index' if 'index' in resp_dict.keys() else 'search'
+        timestamp_from_tags = float(resp_dict[task]['docs'][0]['tags']['timestamp'])
+        _log_time_per_pod(routes=resp_dict['routes'],
+                          timestamp=timestamp_from_tags,
+                          state=StepItems.state,
+                          task=task,
+                          num_docs=len(resp_dict[task]['docs']), **kwargs)
 
-    for d in resp.search.docs:
-        if len(d.matches) != top_k:
-            logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
-        for m in d.matches:
-            if 'timestamp' not in m.tags.keys():
-                logger.error(f'timestamp not in tags: {m.tags}')
-            # to test that the data from the KV store is retrieved
-            if 'filename' not in m.tags.keys():
-                logger.error(f'did not find "filename" in tags: {m.tags}')
+        for d in resp.search.docs:
+            if len(d.matches) != top_k:
+                logger.error(f'Number of actual matches: {len(d.matches)} vs expected number: {top_k}')
+            for m in d.matches:
+                if 'timestamp' not in m.tags.keys():
+                    logger.error(f'timestamp not in tags: {m.tags}')
+                # to test that the data from the KV store is retrieved
+                if 'filename' not in m.tags.keys():
+                    logger.error(f'did not find "filename" in tags: {m.tags}')
+    except Exception as e:
+        logger.exception(f'Got an exception during `validate_images`. Continuing (not raising)')
 
 
 @validate_arguments
