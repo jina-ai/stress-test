@@ -29,7 +29,7 @@ jobs:
         file: images/remote/index_numpy_binarypb.yml
       - sleep_time: 2
         method: index
-        execution_time: 600
+        execution_time: 240
         inputs:
           method: random_images
           kwargs:
@@ -48,7 +48,7 @@ jobs:
         file: images/remote/query_numpy_binarypb.yml
       - sleep_time: 1
         method: query
-        execution_time: 60
+        execution_time: 120
         inputs:
           method: random_images
           kwargs:
@@ -56,11 +56,11 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            top_k: 5
             type: 'numpy+binarypb'
         client: grpc
         num_clients: 2
         request_size: 100
+        top_k: 15
       - method: terminate_flow
 
       # Query using annoy + binarypb
@@ -79,7 +79,7 @@ jobs:
         file: images/remote/query_annoy_binarypb.yml
       - sleep_time: 1
         method: query
-        execution_time: 60
+        execution_time: 120
         inputs:
           method: random_images
           kwargs:
@@ -87,11 +87,11 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            top_k: 5
             type: 'annoy+binarypb'
         client: grpc
         num_clients: 2
         request_size: 100
+        top_k: 15
       - method: terminate_flow
 
       # Query using faiss + binarypb
@@ -108,7 +108,7 @@ jobs:
         file: images/remote/query_faiss_binarypb.yml
       - sleep_time: 1
         method: query
-        execution_time: 60
+        execution_time: 120
         inputs:
           method: random_images
           kwargs:
@@ -116,14 +116,17 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            top_k: 5
             type: 'faiss+binarypb'
         client: grpc
         num_clients: 2
         request_size: 100
+        top_k: 15
       - method: terminate_flow
 
       - method: delete_workspace
+
+      - method: collect_stats
+        slack: true
 
       - method: upload_to_s3
         directory: '_logs'

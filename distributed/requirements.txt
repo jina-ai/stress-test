@@ -1,6 +1,7 @@
 jina[http]
-pydantic
+boto3
+pandas
 pyyaml
 chevron
-boto3
+pydantic
 requests

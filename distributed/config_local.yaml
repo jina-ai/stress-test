@@ -39,7 +39,7 @@ jobs:
           kwargs:
             type: 'numpy+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 5
         request_size: 100
       - method: terminate_flow
 
@@ -56,11 +56,11 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            top_k: 5
             type: 'numpy+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 5
         request_size: 100
+        top_k: 20
       - method: terminate_flow
 
       # Query using annoy + binarypb
@@ -121,6 +121,9 @@ jobs:
 
       - method: delete_workspace
 
-      # - method: upload_to_s3
-      #   directory: '_logs'
-      #   bucket: 'e2e-distributed-stress-tests'
+      - method: collect_stats
+        slack: false
+
+      - method: upload_to_s3
+        directory: '_logs'
+        bucket: 'e2e-distributed-stress-tests'

@@ -33,12 +33,12 @@ _random_names = ('first', 'great', 'local', 'small', 'right', 'large', 'young', 
                  'peter')
 
 
-class GatewayClients(Enum):
+class GatewayClients(str, Enum):
     GRPC = 'grpc'
     WEBSOCKET = 'websocket'
 
 
-class Tasks(Enum):
+class Tasks(str, Enum):
     INDEX = 'index'
     SEARCH = 'search'
 

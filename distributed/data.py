@@ -18,16 +18,26 @@ def _fetch_client(client: GatewayClients):
     args = set_client_cli_parser().parse_args(['--host', gateway_data_host, '--port-expose', str(gateway_data_port)])
     return Client(args) if client == GatewayClients.GRPC else WebSocketClient(args)
 
-def _trigger(task: Tasks, client: GatewayClients, execution_time: float,
-             inputs: Callable, inputs_args: Dict, request_size: int, on_always: Callable, on_always_args: Dict):
+
+def _trigger(task: Tasks, client: GatewayClients, execution_time: float, inputs: Callable,
+             inputs_args: Dict, request_size: int, on_always: Callable, on_always_args: Dict, top_k: int = 10):
     run_until = time.time() + execution_time
     client = _fetch_client(client=client)
     while time.time() < run_until:
-        getattr(client, task)(
-            inputs(**inputs_args),
-            request_size=request_size,
-            on_always=partial(on_always, **on_always_args)
-        )
+        if task == Tasks.INDEX:
+            client.index(
+                inputs(**inputs_args),
+                request_size=request_size,
+                on_always=partial(on_always, **on_always_args)
+            )
+        elif task == Tasks.SEARCH:
+            client.search(
+                inputs(**inputs_args),
+                request_size=request_size,
+                top_k=top_k,
+                on_always=partial(on_always, **on_always_args)
+            )
+
 
 def _handle_clients(num_clients, *args):
     with Pool(num_clients) as pool:
@@ -36,7 +46,8 @@ def _handle_clients(num_clients, *args):
 
 
 @validate_arguments
-def index(inputs: Callable,
+def index(*,
+          inputs: Callable,
           inputs_args: Dict,
           on_always: Callable,
           on_always_args: Dict = {},
@@ -57,11 +68,11 @@ def query(*,
           on_always: Callable,
           on_always_args: Dict = {},
           client: GatewayClients = 'grpc',
-          execution_time: int = 10,
           num_clients: int = 1,
           request_size: int = 100,
+          execution_time: int = 10,
           top_k: int = 10):
     logger.info(f'👍 Starting querying for {execution_time} secs')
     on_always_args.update({'top_k': top_k, 'client': client.value})
     _handle_clients(num_clients, 'search', client, execution_time, inputs,
-                    inputs_args, request_size, on_always, on_always_args)
+                    inputs_args, request_size, on_always, on_always_args, top_k)

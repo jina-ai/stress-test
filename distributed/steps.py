@@ -6,6 +6,7 @@ from pydantic.types import DirectoryPath
 import data
 import control
 from aws import S3
+from stats import collect_and_push
 from helper import update_environment_vars, GatewayClients
 
 
@@ -86,7 +87,8 @@ class StepItems:
               client: GatewayClients = GatewayClients.GRPC,
               num_clients: int = 1,
               request_size: int = 100,
-              execution_time: int = 10):
+              execution_time: int = 10,
+              top_k: int = 10):
         data.query(inputs=inputs,
                    inputs_args=inputs_args,
                    on_always=on_always,
@@ -94,7 +96,8 @@ class StepItems:
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,
-                   request_size=request_size)
+                   request_size=request_size,
+                   top_k=top_k)
 
     @classmethod
     @validate_arguments
@@ -112,3 +115,10 @@ class StepItems:
                          local_directory: str = '.',
                          bucket: str = 'e2e-distributed-stress-tests'):
         S3(bucket=bucket).get(key=key, local_path=f'{local_directory}/{key}')
+
+    @classmethod
+    @validate_arguments
+    def collect_stats(cls,
+                      *,
+                      slack: bool = False):
+        collect_and_push(slack=slack)

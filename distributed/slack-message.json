@@ -1,0 +1,75 @@
+{
+    "blocks": [
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "jina"
+                        },
+                        {
+                            "type": "text",
+                            "text": " Jina was put under some stress! "
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "space_invader"
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "cloud"
+                        },
+                        {
+                            "type": "text",
+                            "text": " S3 bucket with results: "
+                        },
+                        {
+                            "type": "text",
+                            "text": " e2e-distributed-stress-tests/{{ TFID }} ",
+                            "style": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "upside_down_face"
+                        }
+                    ]
+                },
+				{
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "party_blob"
+                        },
+                        {
+                            "type": "text",
+                            "text": " Here's the summary! "
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_preformatted",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "{{ STRESS_TEST_RESULTS }}",
+                            "style": {
+                                "bold": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
