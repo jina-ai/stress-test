@@ -83,7 +83,7 @@ jobs:
         inputs:
           method: random_images
           kwargs:
-            num_docs: 1
+            num_docs: 10
         on_always:
           method: validate_images
           kwargs:
@@ -112,7 +112,7 @@ jobs:
         inputs:
           method: random_images
           kwargs:
-            num_docs: 1
+            num_docs: 10
         on_always:
           method: validate_images
           kwargs:
