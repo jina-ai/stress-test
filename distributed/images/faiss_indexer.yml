@@ -27,4 +27,4 @@ requests:
             - content
           traversal_paths: ['r']
     ControlRequest:
-      - !ControlReqDriver {}
+      - jtype: ControlReqDriver {}

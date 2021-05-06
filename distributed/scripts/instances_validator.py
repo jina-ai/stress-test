@@ -31,7 +31,8 @@ while time.time() < check_until and sum(e2e_ip_validate.values()) != len(e2e_ip_
         except requests.ConnectionError:
             print(f'Timeout for {instance_name}:{ip}')
             e2e_ip_validate[ip] = False
-    print(f'Current status: {e2e_ip_validate}')
+    print(f'Current status: {e2e_ip_validate}, sleeping for a second!')
+    time.sleep(1)
 
 
 if time.time() > check_until:

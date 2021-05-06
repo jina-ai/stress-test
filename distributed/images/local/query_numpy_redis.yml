@@ -1,0 +1,27 @@
+jtype: Flow
+version: '1'
+with:
+  read_only: true
+  rest_api: {{ JINA_GATEWAY_REST }}
+  port_expose: {{ JINA_GATEWAY_PORT_EXPOSE }}
+pods:
+  - name: encoder
+    uses: encoder.yml
+    shards: {{ JINA_ENCODER_SHARDS }}
+    timeout_ready: 600000
+  - name: vec_idx
+    uses: vec.yml
+    shards: {{ JINA_VEC_INDEXER_SHARDS }}
+    polling: all
+    uses_after: _merge_matches
+    timeout_ready: 100000 # larger timeout as in query time will read all the data
+    volumes: ':/docker-workspace'
+    docker_kwargs:
+      environment:
+        OMP_NUM_THREADS: {{ OMP_NUM_THREADS }}
+  - name: redis_idx
+    uses: redis.yml
+    shards: {{ JINA_KV_INDEXER_SHARDS }}
+    polling: all
+    uses_after: merge_and_topk.yml
+    timeout_ready: 100000 # larger timeout as in query time will read all the data

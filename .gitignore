@@ -139,3 +139,4 @@ docs_*.parquet
 # Log folder written by logger
 _logs/
 _rendered/
+*instances.yaml

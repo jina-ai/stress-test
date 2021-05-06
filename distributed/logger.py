@@ -2,6 +2,7 @@ import os
 import logging
 from datetime import datetime
 
+LOGS_DIR = '_logs'
 
 def _trigger_formatter():
     _datefmt = '%b %d %H:%M:%S'
@@ -15,7 +16,7 @@ def _metrics_formatter():
 
 def _file_handler(context='trigger'):
     file_handler = logging.FileHandler(
-        filename=datetime.now().strftime(f'_logs/{context}_%b_%d_%m_%Y.log'))
+        filename=datetime.now().strftime(f'{LOGS_DIR}/{context}_%b_%d_%m_%Y.log'))
     file_handler.setFormatter(_trigger_formatter()) if context == 'trigger' \
         else file_handler.setFormatter(_metrics_formatter())
     return file_handler
@@ -31,4 +32,3 @@ def get_logger(context='trigger'):
 
 
 logger = get_logger(context='trigger')
-p2p_metrics_logger = get_logger(context='p2p')  # means pod2pod

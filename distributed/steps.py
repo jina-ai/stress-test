@@ -1,3 +1,4 @@
+import os
 import uuid
 from typing import List, Dict, Callable, ClassVar
 from pydantic import validate_arguments, FilePath
@@ -6,7 +7,8 @@ from pydantic.types import DirectoryPath
 import data
 import control
 from aws import S3
-from helper import set_environment_vars, GatewayClients
+from stats import collect_and_push
+from helper import update_environment_vars, GatewayClients
 
 
 class StepItems:
@@ -20,7 +22,7 @@ class StepItems:
                          *,
                          files: List[FilePath],
                          environment: Dict[str, str]):
-        set_environment_vars(files=files, environment=environment)
+        update_environment_vars(files=files, environment=environment)
         StepItems.workspace = control.create_or_update_workspace(files=files)
 
     @classmethod
@@ -29,7 +31,7 @@ class StepItems:
                          *,
                          files: List[FilePath],
                          environment: Dict[str, str]):
-        set_environment_vars(files=files, environment=environment)
+        update_environment_vars(files=files, environment=environment)
         StepItems.workspace = control.create_or_update_workspace(files=files,
                                                                  workspace_id=StepItems.workspace)
 
@@ -62,8 +64,6 @@ class StepItems:
               inputs_args: Dict,
               on_always: Callable,
               on_always_args: Dict = {},
-              gateway_host: str = 'localhost',
-              gateway_port: int = 23456,
               client: GatewayClients = GatewayClients.GRPC,
               num_clients: int = 1,
               request_size: int = 100,
@@ -72,8 +72,6 @@ class StepItems:
                    inputs_args=inputs_args,
                    on_always=on_always,
                    on_always_args=on_always_args,
-                   gateway_host=gateway_host,
-                   gateway_port=gateway_port,
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,
@@ -87,19 +85,15 @@ class StepItems:
               inputs_args: Dict,
               on_always: Callable,
               on_always_args: Dict = {},
-              gateway_host: str = 'localhost',
-              gateway_port: int = 23456,
               client: GatewayClients = GatewayClients.GRPC,
               num_clients: int = 1,
               request_size: int = 100,
-              top_k: int = 50,
-              execution_time: int = 10):
+              execution_time: int = 10,
+              top_k: int = 10):
         data.query(inputs=inputs,
                    inputs_args=inputs_args,
                    on_always=on_always,
                    on_always_args=on_always_args,
-                   gateway_host=gateway_host,
-                   gateway_port=gateway_port,
                    client=client,
                    execution_time=execution_time,
                    num_clients=num_clients,
@@ -112,7 +106,8 @@ class StepItems:
                      *,
                      directory: DirectoryPath,
                      bucket: str = 'e2e-distributed-stress-tests'):
-        S3(bucket=bucket).add(path=directory, key=str(uuid.uuid4()))
+        s3_key = os.getenv('TFID') if 'TFID' in os.environ else str(uuid.uuid4())
+        S3(bucket=bucket).add(path=directory, key=s3_key)
 
     @classmethod
     @validate_arguments
@@ -122,3 +117,10 @@ class StepItems:
                          local_directory: str = '.',
                          bucket: str = 'e2e-distributed-stress-tests'):
         S3(bucket=bucket).get(key=key, local_path=f'{local_directory}/{key}')
+
+    @classmethod
+    @validate_arguments
+    def collect_stats(cls,
+                      *,
+                      slack: bool = False):
+        collect_and_push(slack=slack)

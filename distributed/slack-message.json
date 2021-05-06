@@ -1,0 +1,115 @@
+{
+    "blocks": [
+        {
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "waving-from-afar-left"
+                        },
+                        {
+                            "type": "text",
+                            "text": " Folks, this is stress-test bot. "
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "space_invader"
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "jina"
+                        },
+                        {
+                            "type": "text",
+                            "text": " I was asked to put Jina under some stress! "
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "technologist"
+                        },
+						{
+							"type": "text",
+							"text": " FYI: "
+						},
+                        {
+                            "type": "link",
+                            "text": " Python App Code ",
+                            "url": "https://github.com/jina-ai/stress-test/tree/master/distributed"
+                        },
+						{
+							"type": "text",
+							"text": "&"
+						},
+                        {
+                            "type": "link",
+                            "text": " Terraform Infra Code ",
+                            "url": "https://github.com/jina-ai/jina-terraform/tree/main/e2e-distributed-stress-tests"
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "cloud"
+                        },
+                        {
+                            "type": "text",
+                            "text": " S3 bucket with results: "
+                        },
+                        {
+                            "type": "text",
+                            "text": " e2e-distributed-stress-tests/{{ TFID }} ",
+                            "style": {
+                                "bold": true
+                            }
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "upside_down_face"
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "emoji",
+                            "name": "party_blob"
+                        },
+                        {
+                            "type": "text",
+                            "text": " Summary of the current run: "
+                        }
+                    ]
+                },
+                {
+                    "type": "rich_text_preformatted",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "{{ STRESS_TEST_RESULTS }}",
+                            "style": {
+                                "bold": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
