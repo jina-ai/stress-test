@@ -39,7 +39,7 @@ jobs:
           kwargs:
             type: 'numpy+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 5
         request_size: 100
       - method: terminate_flow
 
@@ -58,7 +58,7 @@ jobs:
           kwargs:
             type: 'numpy+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 10
         request_size: 100
         top_k: 15
       - method: terminate_flow
@@ -89,7 +89,7 @@ jobs:
           kwargs:
             type: 'annoy+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 10
         request_size: 100
         top_k: 15
       - method: terminate_flow
@@ -118,7 +118,7 @@ jobs:
           kwargs:
             type: 'faiss+binarypb'
         client: grpc
-        num_clients: 2
+        num_clients: 10
         request_size: 100
         top_k: 15
       - method: terminate_flow

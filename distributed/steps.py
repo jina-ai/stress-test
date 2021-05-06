@@ -1,3 +1,4 @@
+import os
 import uuid
 from typing import List, Dict, Callable, ClassVar
 from pydantic import validate_arguments, FilePath
@@ -105,7 +106,8 @@ class StepItems:
                      *,
                      directory: DirectoryPath,
                      bucket: str = 'e2e-distributed-stress-tests'):
-        S3(bucket=bucket).add(path=directory, key=str(uuid.uuid4()))
+        s3_key = os.getenv('TFID') if 'TFID' in os.environ else str(uuid.uuid4())
+        S3(bucket=bucket).add(path=directory, key=s3_key)
 
     @classmethod
     @validate_arguments

@@ -1,4 +1,5 @@
 import os
+import uuid
 import glob
 import chevron
 import requests
@@ -60,7 +61,7 @@ def collect_and_push(slack=False):
 
     if slack:
         push_to_slack(STRESS_TEST_RESULTS=str(table).replace('\n', '\\n'),
-                      TFID=5678)
+                      TFID=os.getenv('TFID') if 'TFID' in os.environ else str(uuid.uuid4()))
 
     return table
 
