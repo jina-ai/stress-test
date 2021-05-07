@@ -44,19 +44,19 @@
                             "type": "emoji",
                             "name": "technologist"
                         },
-			{
-				"type": "text",
-				"text": " FYI: "
-			},
+						{
+							"type": "text",
+							"text": " FYI: "
+						},
                         {
                             "type": "link",
                             "text": " Python App Code ",
                             "url": "https://github.com/jina-ai/stress-test/tree/master/distributed"
                         },
-			{
-				"type": "text",
-				"text": "&"
-			},
+						{
+							"type": "text",
+							"text": "&"
+						},
                         {
                             "type": "link",
                             "text": " Terraform Infra Code \n",
@@ -81,10 +81,6 @@
                             "style": {
                                 "bold": true
                             }
-                        },
-                        {
-                            "type": "emoji",
-                            "name": "upside_down_face"
                         }
                     ]
                 },
