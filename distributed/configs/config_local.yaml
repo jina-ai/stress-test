@@ -37,7 +37,7 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            type: 'numpy+binarypb'
+            type: 'Numpy+BinaryPb+ImageTorch'
         client: grpc
         num_clients: 5
         request_size: 100
@@ -56,7 +56,7 @@ jobs:
         on_always:
           method: validate_images
           kwargs:
-            type: 'numpy+binarypb'
+            type: 'Numpy+BinaryPb+ImageTorch'
         client: grpc
         num_clients: 5
         request_size: 100
@@ -86,6 +86,8 @@ jobs:
             num_docs: 1
         on_always:
           method: validate_images
+          kwargs:
+            type: 'Annoy+BinaryPb+ImageTorch'
         client: grpc
         num_clients: 1
         request_size: 5
@@ -113,6 +115,8 @@ jobs:
             num_docs: 1
         on_always:
           method: validate_images
+          kwargs:
+            type: 'Faiss+BinaryPb+ImageTorch'
         client: grpc
         num_clients: 1
         request_size: 5

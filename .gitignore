@@ -140,3 +140,4 @@ docs_*.parquet
 _logs/
 _rendered/
 *instances.yaml
+nohup.out

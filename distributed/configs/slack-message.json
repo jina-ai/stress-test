@@ -40,47 +40,60 @@
                 {
                     "type": "rich_text_section",
                     "elements": [
+						{
+							"type": "text",
+							"text": "\n For reference & debugging: \n",
+                            "style": {
+                                "bold": true
+                            }
+						},
                         {
                             "type": "emoji",
-                            "name": "technologist"
+                            "name": "jina-code-logo"
                         },
-						{
-							"type": "text",
-							"text": " FYI: "
-						},
                         {
                             "type": "link",
-                            "text": " Python App Code ",
+                            "text": " Python App Code & Flow details",
                             "url": "https://github.com/jina-ai/stress-test/tree/master/distributed"
                         },
-						{
-							"type": "text",
-							"text": "&"
-						},
+                        {
+                            "type": "text",
+                            "text": "\n"
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "squirrel"
+                        },
                         {
                             "type": "link",
-                            "text": " Terraform Infra Code \n",
+                            "text": " Terraform Infra Code",
                             "url": "https://github.com/jina-ai/jina-terraform/tree/main/e2e-distributed-stress-tests"
-                        }
-                    ]
-                },
-                {
-                    "type": "rich_text_section",
-                    "elements": [
+                        },
+                        {
+                            "type": "text",
+                            "text": "\n"
+                        },
+                        {
+                            "type": "emoji",
+                            "name": "jina-github-repo"
+                        },
+                        {
+                            "type": "link",
+                            "text": " Github Action for Trigger & Terminate",
+                            "url": "https://s3.console.aws.amazon.com/s3/buckets/e2e-distributed-stress-tests?region=us-east-2&prefix={{ TFID }}"
+                        },
+                        {
+                            "type": "text",
+                            "text": " (Make sure the infra is destroyed, once you see this message) \n"
+                        },
                         {
                             "type": "emoji",
                             "name": "cloud"
                         },
                         {
-                            "type": "text",
-                            "text": " S3 bucket with results: "
-                        },
-                        {
-                            "type": "text",
-                            "text": " e2e-distributed-stress-tests/{{ TFID }} \n",
-                            "style": {
-                                "bold": true
-                            }
+                            "type": "link",
+                            "text": " S3 bucket with results \n",
+                            "url": "https://s3.console.aws.amazon.com/s3/buckets/e2e-distributed-stress-tests?region=us-east-2&prefix={{ TFID }}"
                         }
                     ]
                 },
