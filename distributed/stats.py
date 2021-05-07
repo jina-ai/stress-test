@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 
 from logger import logger, LOGS_DIR
 
-SLACK_MESSAGE_JSON = 'slack-message.json'
+SLACK_MESSAGE_JSON = 'configs/slack-message.json'
 tasks = ['index', 'search']
 types = ['numpy+binarypb', 'annoy+binarypb', 'faiss+binarypb']
 clients = ['grpc', 'websocket']
