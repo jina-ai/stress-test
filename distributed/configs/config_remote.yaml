@@ -5,9 +5,9 @@ jobs:
         environment:
           JINA_GATEWAY_REST: false
           JINA_GATEWAY_PORT_EXPOSE: 23456
-          JINA_ENCODER_SHARDS: 2
-          JINA_VEC_INDEXER_SHARDS: 2
-          JINA_KV_INDEXER_SHARDS: 1
+          JINA_ENCODER_SHARDS: 12
+          JINA_VEC_INDEXER_SHARDS: 12
+          JINA_KV_INDEXER_SHARDS: 12
           JINA_SCHEDULING: load_balance
           JINA_ENCODER_DRIVER_BATCHING: 16
           JINA_WORKSPACE: workspace
@@ -27,38 +27,38 @@ jobs:
       # Index using numpy + binarypb
       - method: start_flow
         file: images/remote/index_numpy_binarypb.yml
-      - sleep_time: 2
+      - sleep_time: 20
         method: index
         execution_time: 480
         inputs:
           method: random_images
           kwargs:
-            num_docs: 10
+            num_docs: 200
         on_always:
           method: validate_images
           kwargs:
             type: 'Numpy+BinaryPb+ImageTorch'
         client: grpc
-        num_clients: 5
+        num_clients: 15
         request_size: 100
       - method: terminate_flow
 
       # Query using numpy + binarypb
       - method: start_flow
         file: images/remote/query_numpy_binarypb.yml
-      - sleep_time: 1
+      - sleep_time: 30
         method: query
         execution_time: 240
         inputs:
           method: random_images
           kwargs:
-            num_docs: 10
+            num_docs: 50
         on_always:
           method: validate_images
           kwargs:
             type: 'Numpy+BinaryPb+ImageTorch'
         client: grpc
-        num_clients: 10
+        num_clients: 15
         request_size: 100
         top_k: 15
       - method: terminate_flow
@@ -83,7 +83,7 @@ jobs:
         inputs:
           method: random_images
           kwargs:
-            num_docs: 10
+            num_docs: 50
         on_always:
           method: validate_images
           kwargs:
@@ -112,13 +112,13 @@ jobs:
         inputs:
           method: random_images
           kwargs:
-            num_docs: 10
+            num_docs: 50
         on_always:
           method: validate_images
           kwargs:
             type: 'Faiss+BinaryPb+ImageTorch'
         client: grpc
-        num_clients: 10
+        num_clients: 15
         request_size: 100
         top_k: 15
       - method: terminate_flow

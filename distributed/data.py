@@ -39,7 +39,7 @@ def _trigger(task: Tasks, client: GatewayClients, execution_time: float, inputs:
                     on_always=partial(on_always, **on_always_args)
                 )
         except ZeroDivisionError:
-            logger.exception(f'Seems to be an issue with profile logger, ignoring for now.')
+            logger.error(f'ZeroDivisionError: seems to be an issue with profile logger, ignoring for now.')
             continue
 
 

@@ -16,7 +16,7 @@ SLACK_MESSAGE_JSON = 'configs/slack-message.json'
 # TODO: This is error prone. Maybe we should read it from config yaml
 tasks = ['index', 'search']
 types = ['Numpy+BinaryPb+ImageTorch', 'Annoy+BinaryPb+ImageTorch', 'Faiss+BinaryPb+ImageTorch',
-         'Numpy+Redus+ImageTorch', 'Annoy+Redus+ImageTorch', 'Faiss+Redus+ImageTorch']
+         'Numpy+Redis+ImageTorch', 'Annoy+Redis+ImageTorch', 'Faiss+Redis+ImageTorch']
 clients = ['grpc', 'websocket']
 
 
@@ -27,8 +27,8 @@ def collect_and_push(slack=False):
     table.add_column(
         'Experiments',
         ['Task', 'VecIndexer', 'KVIndexer', 'Encoder', 'Client', '#Clients',
-         'Total Time (hrs)', '#Docs', '#Docs per sec (C2C)', 'Time spent (VecIndexer)',
-         'Time spent (KVIndexer)', 'Time spent (Encoder)']
+         'Total Time (hrs)', '#Docs', '# Docs per sec (C2C)', '# Docs per sec (G2G)',
+         'Time spent (VecIndexer)', 'Time spent (KVIndexer)', 'Time spent (Encoder)']
     )
 
     for stats_file in glob.glob(f'{LOGS_DIR}/p2p*.log'):
@@ -59,23 +59,27 @@ def collect_and_push(slack=False):
             def total_time_spent_str(column):
                 return str(timedelta(seconds=int(temp_df[column].sum() / 1000 / _num_clients)))
 
+            def total_time_spent_str_pods(column):
+                return str(timedelta(seconds=int(temp_df[column].sum() / 1000)))
+
             for _pod in _pods:
                 cols = temp_df.columns[(temp_df.columns.str.contains(_pod))]
                 temp_df[cols].fillna(0, inplace=True)
-                temp_df[cols].clip(lower=0)
+                temp_df[cols] = temp_df[cols].clip(lower=0)
                 temp_df[f'{_pod}_time_spent_per_doc_per_client'] = temp_df[cols].sum(axis=1)
-                _total_time_spent_dict[_pod] = total_time_spent_str(f'{_pod}_time_spent_per_doc_per_client')
+                _total_time_spent_dict[_pod] = total_time_spent_str_pods(f'{_pod}_time_spent_per_doc_per_client')
 
             _total_time_spent_dict['client'] = total_time_spent_str('client_roundtrip')
             _total_jina_docs = temp_df.num_jina_docs.sum()
-            _avg_jina_docs_per_sec = _num_clients * _total_jina_docs / (temp_df['client_roundtrip'].sum() / 1000)
+            _avg_jina_docs_per_sec_c2c = _num_clients * _total_jina_docs / (temp_df['client_roundtrip'].sum() / 1000)
+            _avg_jina_docs_per_sec_g2g = _num_clients * _total_jina_docs / (temp_df['gateway'].sum() / 1000)
 
             logger.info(f'Total Client Roundtrip Time: {_total_time_spent_dict["client"]} hours')
             logger.info(f'Total Number of Jina Documents: {_total_jina_docs}')
-            logger.info(f'Avg Jina Documents per sec: {_avg_jina_docs_per_sec:.2f}')
+            logger.info(f'Avg Jina Documents per sec: {_avg_jina_docs_per_sec_c2c:.2f}')
 
             try:
-                _vec_indexer, _kv_indexer, _encoder = map(str.title, _type.split('+'))
+                _vec_indexer, _kv_indexer, _encoder = _type.split('+')
             except ValueError:
                 _vec_indexer, _kv_indexer, _encoder = ['unknown'] * 3
 
@@ -84,8 +88,9 @@ def collect_and_push(slack=False):
             table.add_column(
                 f'Experiment {experiment_idx}',
                 [_task, _vec_indexer, _kv_indexer, _encoder, _client, _num_clients,
-                 _total_time_spent_dict['client'], _total_jina_docs, f'{_avg_jina_docs_per_sec:.1f}',
-                 _total_time_spent_dict['vec_idx'], _total_time_spent_dict['doc_idx'],
+                 _total_time_spent_dict['client'],  _total_jina_docs,
+                 f'{_avg_jina_docs_per_sec_c2c:.1f}', f'{_avg_jina_docs_per_sec_g2g:.1f}',
+                 _total_time_spent_dict['vec_idx'],  _total_time_spent_dict['doc_idx'],
                  _total_time_spent_dict['encoder']]
             )
         else:
