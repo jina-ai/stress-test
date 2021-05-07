@@ -80,7 +80,7 @@
                         {
                             "type": "link",
                             "text": " Github Action for Trigger & Terminate",
-                            "url": "https://s3.console.aws.amazon.com/s3/buckets/e2e-distributed-stress-tests?region=us-east-2&prefix={{ TFID }}"
+                            "url": "https://github.com/jina-ai/jina-terraform/actions/workflows/trigger-stress-tests.yml"
                         },
                         {
                             "type": "text",
@@ -93,7 +93,7 @@
                         {
                             "type": "link",
                             "text": " S3 bucket with results \n",
-                            "url": "https://s3.console.aws.amazon.com/s3/buckets/e2e-distributed-stress-tests?region=us-east-2&prefix={{ TFID }}"
+                            "url": "https://s3.console.aws.amazon.com/s3/buckets/e2e-distributed-stress-tests?region=us-east-2&prefix={{ TFID }}/"
                         }
                     ]
                 },
