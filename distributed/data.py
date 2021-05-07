@@ -24,19 +24,23 @@ def _trigger(task: Tasks, client: GatewayClients, execution_time: float, inputs:
     run_until = time.time() + execution_time
     client = _fetch_client(client=client)
     while time.time() < run_until:
-        if task == Tasks.INDEX:
-            client.index(
-                inputs(**inputs_args),
-                request_size=request_size,
-                on_always=partial(on_always, **on_always_args)
-            )
-        elif task == Tasks.SEARCH:
-            client.search(
-                inputs(**inputs_args),
-                request_size=request_size,
-                top_k=top_k,
-                on_always=partial(on_always, **on_always_args)
-            )
+        try:
+            if task == Tasks.INDEX:
+                client.index(
+                    inputs(**inputs_args),
+                    request_size=request_size,
+                    on_always=partial(on_always, **on_always_args)
+                )
+            elif task == Tasks.SEARCH:
+                client.search(
+                    inputs(**inputs_args),
+                    request_size=request_size,
+                    top_k=top_k,
+                    on_always=partial(on_always, **on_always_args)
+                )
+        except ZeroDivisionError:
+            logger.exception(f'Seems to be an issue with profile logger, ignoring for now.')
+            continue
 
 
 def _handle_clients(num_clients, *args):
