@@ -1,62 +1,58 @@
 jobs:
-  reviews-stress-test:
+  wiki-stress-test:
     steps:
       - method: create_workspace
         environment:
-          JINA_GATEWAY_REST: true
-          JINA_GATEWAY_PORT: 23456
+          JINA_GATEWAY_REST: false
+          JINA_GATEWAY_PORT_EXPOSE: 23456
           JINA_ENCODER_SHARDS: 2
           JINA_VEC_INDEXER_SHARDS: 2
           JINA_KV_INDEXER_SHARDS: 1
           JINA_SCHEDULING: load_balance
           JINA_WORKSPACE: workspace
         files:
-          - reviews/encoder.yml
-          - reviews/chunk_indexer.yml
-          - reviews/segment.yml
-          - reviews/segmenters.py
-          - reviews/index.yml
-          - reviews/query.yml
-          - reviews/chunk_merger.yml
-          - reviews/doc.yml
-          - reviews/ranker.yml
+          - wiki/encoder.yml
+          - wiki/chunk_indexer.yml
+          - wiki/segment.yml
+          - wiki/segmenters.py
+          - wiki/index.yml
+          - wiki/query.yml
+          - wiki/chunk_merger.yml
+          - wiki/doc.yml
+          - wiki/ranker.yml
 
       - method: start_flow
-        file: reviews/index.yml
+        file: wiki/index.yml
       - sleep_time: 2
         method: index
-        execution_time: 60
+        execution_time: 5
         inputs:
-          method: amazon_reviews
+          method: wikipedia_docs
           kwargs:
-            dataset_path: ./reviews.csv
+            dataset_path: /home/tobias/Downloads/wiki_dump
             num_docs: 100
         on_always:
           method: validate_texts
           kwargs:
             top_k: 2
-        gateway_host: localhost
-        gateway_port: 23456
-        client: websocket
+        client: grpc
         num_clients: 1
         request_size: 30
       - method: terminate_flow
 
       - method: start_flow
-        file: reviews/query.yml
+        file: wiki/query.yml
       - sleep_time: 1
         method: query
-        execution_time: 60
+        execution_time: 5
         inputs:
-          method: amazon_reviews
+          method: wikipedia_docs
           kwargs:
-            dataset_path: ./reviews.csv
+            dataset_path: /home/tobias/Downloads/wiki_dump
             num_docs: 10
         on_always:
           method: validate_texts
-        gateway_host: localhost
-        gateway_port: 23456
-        client: websocket
+        client: grpc
         num_clients: 1
         request_size: 10
         top_k: 15

@@ -3,6 +3,7 @@ import itertools
 import os
 import json
 import shutil
+import sys
 import time
 import random
 from enum import Enum
@@ -11,6 +12,7 @@ from shutil import copyfile
 from typing import Dict, List
 from datetime import datetime
 
+import requests
 import yaml
 import chevron
 import numpy as np
@@ -85,30 +87,50 @@ def dataset_images(dataset_path: str, num_docs: int = 100):
             yield doc
 
 
-def amazon_reviews(dataset_path: str, num_docs: int = 100):
+def wikipedia_docs(dataset_path: str, num_docs: int = 100):
     from steps import StepItems
 
-    # Try to download reviews if they dont exist yet
+    # Try to download wikipedia docs if dataset does not exist
     if not os.path.isfile(path=dataset_path):
-        S3Bucket(bucket_name='jina-examples-datasets').get(key='amazon_reviews.zip', local_path='./reviews.zip')
-        shutil.unpack_archive('./reviews.zip')
-        os.remove('./reviews.zip')
-        default_data_set_path = './reviews.csv'
+        requests.get('https://s3.amazonaws.com/uploads-files/wiki_dump.gz', stream=True)
+        shutil.unpack_archive('./wiki_dump.gz')
+        os.remove('./wiki_dump.gz')
+        default_data_set_path = './wiki_dump'
         if dataset_path != default_data_set_path:
-            shutil.move('./reviews.csv', default_data_set_path)
-    ds_reviews_state_key = f'ds_reviews_{dataset_path}'
-    if ds_reviews_state_key not in StepItems.state:
-        f = open(dataset_path, newline='', encoding='utf-8')
-        StepItems.state[ds_reviews_state_key] = csv.reader(f)
-    reader = StepItems.state[ds_reviews_state_key]
+            shutil.move('wiki_dump', default_data_set_path)
+    ds_wiki_state_key = f'ds_wiki_{dataset_path}'
+    if ds_wiki_state_key not in StepItems.state:
+        StepItems.state[ds_wiki_state_key] = open(dataset_path, newline='', encoding='utf-8')
+    reader = StepItems.state[ds_wiki_state_key]
 
-    for row in itertools.islice(reader, num_docs):
-        with Document() as doc:
-            doc.text = row[2]
-            doc.tags['title'] = row[1]
-            doc.tags['stars'] = int(row[0])
-            doc.tags['timestamp'] = str(time.time())
-        yield doc
+    doc_count = 0
+    current_doc = None
+    for line in reader:
+        if doc_count >= num_docs:
+            return
+
+        if line.startswith('<doc>'):
+            current_doc = _create_empty_doc(current_doc)
+        elif line.startswith('</doc>'):
+            yield current_doc
+            current_doc = None
+            doc_count += 1
+        elif line.startswith('<title>'):
+            # format is <title>Wikipedia: Apollo</title>
+            if current_doc is None:
+                current_doc = _create_empty_doc(current_doc)
+            current_doc.tags['title'] = line[line.index('>')+1:line.index('</')].replace("Wikipedia: ", "")
+        elif line.startswith('<abstract>'):
+            # format is <title>Wikipedia: Apollo</title>
+            if current_doc is None:
+                current_doc = _create_empty_doc(current_doc)
+            current_doc.text = line[line.index('>')+1:line.index('</')].replace("Wikipedia: ", "")
+
+
+def _create_empty_doc(current_doc):
+    current_doc = Document()
+    current_doc.tags['timestamp'] = str(time.time())
+    return current_doc
 
 
 def random_texts(num_docs: int = 100):

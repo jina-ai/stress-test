@@ -15,14 +15,24 @@ class TextSegmenter(BaseSegmenter):
     @single(slice_nargs=1)
     def segment(self, text: str, *args, **kwargs) -> List[Dict]:
         """
-        Segments text into words
+        Segments text into sequences of two words
 
         :param text: the text data
         :returns: A list of documents with the extracted data
         :rtype: List[Dict]
         """
         chunks = []
+        joined_words = []
         for word in text.split(" "):
-            chunks.append(dict(text=word, weight=1.0, mime_type='text/plain'))
+            joined_words.append(word)
+            if len(joined_words) == 2:
+                self._append_word(chunks, joined_words)
+                joined_words = []
+        if len(joined_words) > 0:
+            self._append_word(chunks, joined_words)
+
         return chunks
+
+    def _append_word(self, chunks, joined_words):
+        chunks.append(dict(text=' '.join([word for word in joined_words]), weight=1.0, mime_type='text/plain'))
 
