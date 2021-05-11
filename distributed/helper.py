@@ -90,14 +90,6 @@ def dataset_images(dataset_path: str, num_docs: int = 100):
 def wikipedia_docs(dataset_path: str, num_docs: int = 100):
     from steps import StepItems
 
-    # Try to download wikipedia docs if dataset does not exist
-    if not os.path.isfile(path=dataset_path):
-        requests.get('https://s3.amazonaws.com/uploads-files/wiki_dump.gz', stream=True)
-        shutil.unpack_archive('./wiki_dump.gz')
-        os.remove('./wiki_dump.gz')
-        default_data_set_path = './wiki_dump'
-        if dataset_path != default_data_set_path:
-            shutil.move('wiki_dump', default_data_set_path)
     ds_wiki_state_key = f'ds_wiki_{dataset_path}'
     if ds_wiki_state_key not in StepItems.state:
         StepItems.state[ds_wiki_state_key] = open(dataset_path, newline='', encoding='utf-8')

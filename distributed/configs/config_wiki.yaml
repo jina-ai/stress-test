@@ -21,6 +21,9 @@ jobs:
           - wiki/doc.yml
           - wiki/ranker.yml
 
+      - method: download_and_extract_from_web
+        uri: https://s3.amazonaws.com/uploads-files/wiki_dump.gz
+        format: gztar
       - method: start_flow
         file: wiki/index.yml
       - sleep_time: 2
@@ -29,7 +32,7 @@ jobs:
         inputs:
           method: wikipedia_docs
           kwargs:
-            dataset_path: /home/tobias/Downloads/wiki_dump
+            dataset_path: ./enwiki-latest-abstract.xml
             num_docs: 100
         on_always:
           method: validate_texts
