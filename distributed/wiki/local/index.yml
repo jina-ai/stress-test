@@ -5,7 +5,10 @@ with:
   port_expose: {{ JINA_GATEWAY_PORT_EXPOSE }}
 pods:
   - name: segmenter
+    polling: any
+    shards: {{ JINA_SEGMENTER_SHARDS }}
     uses: segment.yml
+    scheduling: {{ JINA_SCHEDULING }}
     read_only: true
   - name: encoder
     polling: any
@@ -14,19 +17,19 @@ pods:
     shards: {{ JINA_ENCODER_SHARDS }}
     timeout_ready: 10000
     read_only: true
-  - name: chunk_indexer
+  - name: vec_idx
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
     uses: chunk_indexer.yml
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
     timeout_ready: 10000
-  - name: doc_indexer
+  - name: doc_idx
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
     uses: doc.yml
-    shards: {{ JINA_VEC_INDEXER_SHARDS }}
+    shards: {{ JINA_KV_INDEXER_SHARDS }}
     needs: gateway
   - name: join_all
     uses: _merge
-    needs: [ doc_indexer, chunk_indexer ]
+    needs: [ doc_idx, vec_idx ]
     read_only: true

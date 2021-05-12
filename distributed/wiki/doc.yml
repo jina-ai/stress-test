@@ -2,7 +2,7 @@
 with:
   index_filename: doc.gz
 metas:
-  name: docidx
+  name: doc_idx
   workspace: ./workspace
 requests:
   on:

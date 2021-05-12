@@ -5,18 +5,22 @@ jobs:
         environment:
           JINA_GATEWAY_REST: false
           JINA_GATEWAY_PORT_EXPOSE: 23456
-          JINA_ENCODER_SHARDS: 2
-          JINA_VEC_INDEXER_SHARDS: 2
-          JINA_KV_INDEXER_SHARDS: 1
+          JINA_SEGMENTER_SHARDS: 12
+          JINA_ENCODER_SHARDS: 12
+          JINA_VEC_INDEXER_SHARDS: 12
+          JINA_KV_INDEXER_SHARDS: 12
+          JINA_RANKER_SHARDS: 12
           JINA_SCHEDULING: load_balance
+          JINA_ENCODER_DRIVER_BATCHING: 16
           JINA_WORKSPACE: workspace
+          JINA_DISTANCE_REVERSE: false
         files:
+          - wiki/remote/index.yml
+          - wiki/remote/query.yml
           - wiki/encoder.yml
           - wiki/chunk_indexer.yml
           - wiki/segment.yml
           - wiki/segmenters.py
-          - wiki/index.yml
-          - wiki/query.yml
           - wiki/chunk_merger.yml
           - wiki/doc.yml
           - wiki/ranker.yml
@@ -25,39 +29,50 @@ jobs:
         uri: https://s3.amazonaws.com/uploads-files/wiki_dump.gz
         format: gztar
       - method: start_flow
-        file: wiki/index.yml
-      - sleep_time: 2
+        file: wiki/remote/index.yml
+      - sleep_time: 20
         method: index
-        execution_time: 5
+        execution_time: 480
         inputs:
           method: wikipedia_docs
           kwargs:
             dataset_path: ./enwiki-latest-abstract.xml
-            num_docs: 100
+            num_docs: 200
         on_always:
           method: validate_texts
           kwargs:
-            top_k: 2
+            type: 'NumpyIndexer+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 1
+        num_clients: 15
         request_size: 30
       - method: terminate_flow
 
       - method: start_flow
-        file: wiki/query.yml
-      - sleep_time: 1
+        file: wiki/remote/query.yml
+      - sleep_time: 30
         method: query
-        execution_time: 5
+        execution_time: 240
         inputs:
           method: wikipedia_docs
           kwargs:
-            dataset_path: /home/tobias/Downloads/wiki_dump
-            num_docs: 10
+            dataset_path: ./enwiki-latest-abstract.xml
+            num_docs: 50
         on_always:
           method: validate_texts
+          kwargs:
+            type: 'NumpyIndexer+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 1
+        num_clients: 15
         request_size: 10
         top_k: 15
+
       - method: terminate_flow
+
       - method: delete_workspace
+
+      - method: collect_stats
+        slack: false
+
+      - method: upload_to_s3
+        directory: '_logs'
+        bucket: 'e2e-distributed-stress-tests'

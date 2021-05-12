@@ -16,7 +16,8 @@ SLACK_MESSAGE_JSON = 'configs/slack-message.json'
 # TODO: This is error prone. Maybe we should read it from config yaml
 tasks = ['index', 'search']
 types = ['Numpy+BinaryPb+ImageTorch', 'Annoy+BinaryPb+ImageTorch', 'Faiss+BinaryPb+ImageTorch',
-         'Numpy+Redis+ImageTorch', 'Annoy+Redis+ImageTorch', 'Faiss+Redis+ImageTorch']
+         'Numpy+Redis+ImageTorch', 'Annoy+Redis+ImageTorch', 'Faiss+Redis+ImageTorch',
+         'NumpyIndexer+BinaryPb+TransformerTorch']
 clients = ['grpc', 'websocket']
 
 
