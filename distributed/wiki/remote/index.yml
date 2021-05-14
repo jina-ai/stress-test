@@ -17,7 +17,7 @@ pods:
     scheduling: {{ JINA_SCHEDULING }}
     uses: encoder.yml
     shards: {{ JINA_ENCODER_SHARDS }}
-    timeout_ready: 10000
+    timeout_ready: 60000
     read_only: true
     host: {{ JINA_ENCODER_HOST }}
     port_expose: {{ JINA_ENCODER_PORT }}
