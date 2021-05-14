@@ -1,0 +1,32 @@
+!BinaryPbIndexer
+with:
+  index_filename: doc.gz
+metas:
+  name: doc_idx
+  workspace: ./workspace
+requests:
+  on:
+    ControlRequest:
+      - !ControlReqDriver {}
+    SearchRequest:
+      - !KVSearchDriver
+        with:
+          traversal_paths: ['m']
+      - !SliceQL
+        with:
+          traversal_paths: ['m']
+          start: 0
+          end: 10
+      - !ExcludeQL
+        with:
+          fields:
+            - chunks
+    IndexRequest:
+      - !ExcludeQL
+        with:
+          fields:
+            - chunks
+            - buffer
+      - !KVIndexDriver
+        with:
+          traversal_paths: ['r']

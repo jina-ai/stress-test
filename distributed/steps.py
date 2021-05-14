@@ -1,6 +1,8 @@
 import os
 import uuid
 from typing import List, Dict, Callable, ClassVar
+
+import requests
 from pydantic import validate_arguments, FilePath
 from pydantic.types import DirectoryPath
 
@@ -124,3 +126,22 @@ class StepItems:
                       *,
                       slack: bool = False):
         collect_and_push(slack=slack)
+
+    @classmethod
+    @validate_arguments
+    def download_and_extract_from_web(cls,
+                                      *,
+                                      uri: str,
+                                      format: str = None):
+        import shutil
+
+        file_name = f'./{os.path.basename(uri)}'
+        if not os.path.exists(file_name):
+            resp = requests.get(uri)
+            if resp.status_code != 200:
+                raise FileNotFoundError(f'Could not download data from {uri}')
+            else:
+                with open(file_name, 'wb') as f:
+                    f.write(resp.content)
+                shutil.unpack_archive(file_name, format=format)
+

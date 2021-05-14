@@ -1,0 +1,46 @@
+jtype: Flow
+version: '1'
+with:
+  read_only: true
+  rest_api: {{ JINA_GATEWAY_REST }}
+  port_expose: {{ JINA_GATEWAY_PORT_EXPOSE }}
+pods:
+  - name: segmenter
+    polling: all
+    shards: {{ JINA_SEGMENTER_SHARDS }}
+    uses: segment.yml
+    read_only: true
+    host: {{ JINA_SEGMENTER_HOST }}
+    port_expose: {{ JINA_SEGMENTER_PORT }}
+  - name: encoder
+    polling: all
+    scheduling: {{ JINA_SCHEDULING }}
+    uses: encoder.yml
+    shards: {{ JINA_ENCODER_SHARDS }}
+    uses_after: chunk_merger.yml
+    timeout_ready: -1
+    read_only: true
+    host: {{ JINA_ENCODER_HOST }}
+    port_expose: {{ JINA_ENCODER_PORT }}
+  - name: vec_idx
+    scheduling: {{ JINA_SCHEDULING }}
+    uses: chunk_indexer.yml
+    shards: {{ JINA_VEC_INDEXER_SHARDS }}
+    polling: all
+    uses_after: chunk_merger.yml
+    timeout_ready: -1
+    host: {{ JINA_VEC_INDEXER_HOST }}
+    port_expose: {{ JINA_VEC_INDEXER_PORT }}
+  - name: ranker
+    polling: all
+    shards: {{ JINA_RANKER_SHARDS }}
+    uses: ranker.yml
+    host: {{ JINA_RANKER_HOST }}
+    port_expose: {{ JINA_RANKER_PORT }}
+  - name: doc_idx
+    uses: doc.yml
+    shards: {{ JINA_KV_INDEXER_SHARDS }}
+    polling: all
+    timeout_ready: 100000
+    host: {{ JINA_KV_INDEXER_HOST }}
+    port_expose: {{ JINA_KV_INDEXER_PORT }}

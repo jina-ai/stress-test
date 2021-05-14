@@ -1,5 +1,9 @@
+import csv
+import itertools
 import os
 import json
+import shutil
+import sys
 import time
 import random
 from enum import Enum
@@ -8,10 +12,12 @@ from shutil import copyfile
 from typing import Dict, List
 from datetime import datetime
 
+import requests
 import yaml
 import chevron
 import numpy as np
 from jina import Document, Request
+from jinacld_tools.aws.services.s3 import S3Bucket
 from pydantic import FilePath, validate_arguments
 
 from logger import logger
@@ -20,6 +26,7 @@ LOGGERS = {}
 RENDER_DIR = '_rendered'
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
+SUPPORTED_IMAGE_SUFFIXES = ('.jpg', '.jpeg', '.png', '.gif')
 
 _random_names = ('first', 'great', 'local', 'small', 'right', 'large', 'young', 'early', 'major', 'clear', 'black',
                  'whole', 'third', 'white', 'short', 'human', 'royal', 'wrong', 'legal', 'final', 'close', 'total',
@@ -59,6 +66,63 @@ def random_images(num_docs: int = 100):
             doc.tags['filename'] = f'image {idx}'
             doc.tags['timestamp'] = str(time.time())
         yield doc
+
+
+def dataset_images(dataset_path: str, num_docs: int = 100):
+    from steps import StepItems
+    from PIL import Image
+
+    ds_image_state_key = f'ds_image_{dataset_path}'
+    if ds_image_state_key not in StepItems.state:
+        StepItems.state[ds_image_state_key] = os.scandir(dataset_path)
+    files = StepItems.state[ds_image_state_key]
+
+    for file in itertools.islice(files, num_docs):
+        if file.is_file() and Path(file.path).suffix.lower() in SUPPORTED_IMAGE_SUFFIXES:
+            with Document() as doc:
+                img = Image.open(file.path)
+                doc.content = np.array(img)
+                doc.mime_type = img.get_format_mimetype()
+                doc.tags['filename'] = file.name
+            yield doc
+
+
+def wikipedia_docs(dataset_path: str, num_docs: int = 100):
+    from steps import StepItems
+
+    ds_wiki_state_key = f'ds_wiki_{dataset_path}'
+    if ds_wiki_state_key not in StepItems.state:
+        StepItems.state[ds_wiki_state_key] = open(dataset_path, newline='', encoding='utf-8')
+    reader = StepItems.state[ds_wiki_state_key]
+
+    doc_count = 0
+    current_doc = None
+    for line in reader:
+        if doc_count >= num_docs:
+            return
+
+        if line.startswith('<doc>'):
+            current_doc = _create_empty_doc(current_doc)
+        elif line.startswith('</doc>'):
+            yield current_doc
+            current_doc = None
+            doc_count += 1
+        elif line.startswith('<title>'):
+            # format is <title>Wikipedia: Apollo</title>
+            if current_doc is None:
+                current_doc = _create_empty_doc(current_doc)
+            current_doc.tags['title'] = line[line.index('>')+1:line.index('</')].replace("Wikipedia: ", "")
+        elif line.startswith('<abstract>'):
+            # format is <title>Wikipedia: Apollo</title>
+            if current_doc is None:
+                current_doc = _create_empty_doc(current_doc)
+            current_doc.text = line[line.index('>')+1:line.index('</')].replace("Wikipedia: ", "")
+
+
+def _create_empty_doc(current_doc):
+    current_doc = Document()
+    current_doc.tags['timestamp'] = str(time.time())
+    return current_doc
 
 
 def random_texts(num_docs: int = 100):
