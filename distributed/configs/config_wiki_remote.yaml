@@ -43,7 +43,7 @@ jobs:
           kwargs:
             type: 'NumpyIndexer+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 15
+        num_clients: 5
         request_size: 30
       - method: terminate_flow
 
@@ -62,7 +62,7 @@ jobs:
           kwargs:
             type: 'NumpyIndexer+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 15
+        num_clients: 5
         request_size: 10
         top_k: 15
 
