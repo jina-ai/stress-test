@@ -12,6 +12,7 @@ pods:
     read_only: true
     host: {{ JINA_SEGMENTER_HOST }}
     port_expose: {{ JINA_SEGMENTER_PORT }}
+    timeout_ready: '-1'
     upload_files:
       - segmenters.py
   - name: encoder
@@ -19,7 +20,7 @@ pods:
     scheduling: {{ JINA_SCHEDULING }}
     uses: encoder.yml
     shards: {{ JINA_ENCODER_SHARDS }}
-    timeout_ready: 60000
+    timeout_ready: '-1'
     read_only: true
     host: {{ JINA_ENCODER_HOST }}
     port_expose: {{ JINA_ENCODER_PORT }}
@@ -28,7 +29,7 @@ pods:
     scheduling: {{ JINA_SCHEDULING }}
     uses: chunk_indexer.yml
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
-    timeout_ready: 10000
+    timeout_ready: '-1'
     host: {{ JINA_VEC_INDEXER_HOST }}
     port_expose: {{ JINA_VEC_INDEXER_PORT }}
   - name: doc_idx
@@ -38,8 +39,11 @@ pods:
     shards: {{ JINA_KV_INDEXER_SHARDS }}
     needs: gateway
     host: {{ JINA_KV_INDEXER_HOST }}
+    timeout_ready: '-1'
     port_expose: {{ JINA_KV_INDEXER_PORT }}
   - name: join_all
+    method: needs
     uses: _merge
     needs: [ doc_idx, vec_idx ]
+    timeout_ready: '-1'
     read_only: true

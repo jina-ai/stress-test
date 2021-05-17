@@ -30,6 +30,7 @@ pods:
     shards: {{ JINA_KV_INDEXER_SHARDS }}
     needs: gateway
   - name: join_all
+    method: needs
     uses: _merge
     needs: [ doc_idx, vec_idx ]
     read_only: true
