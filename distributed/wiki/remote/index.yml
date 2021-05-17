@@ -12,6 +12,8 @@ pods:
     read_only: true
     host: {{ JINA_SEGMENTER_HOST }}
     port_expose: {{ JINA_SEGMENTER_PORT }}
+    upload_files:
+      - segmenters.py
   - name: encoder
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
