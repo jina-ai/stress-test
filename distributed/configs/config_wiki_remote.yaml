@@ -5,11 +5,11 @@ jobs:
         environment:
           JINA_GATEWAY_REST: false
           JINA_GATEWAY_PORT_EXPOSE: 23456
-          JINA_SEGMENTER_SHARDS: 12
-          JINA_ENCODER_SHARDS: 6
-          JINA_VEC_INDEXER_SHARDS: 12
-          JINA_KV_INDEXER_SHARDS: 12
-          JINA_RANKER_SHARDS: 12
+          JINA_SEGMENTER_SHARDS: 2
+          JINA_ENCODER_SHARDS: 2
+          JINA_VEC_INDEXER_SHARDS: 2
+          JINA_KV_INDEXER_SHARDS: 2
+          JINA_RANKER_SHARDS: 2
           JINA_SCHEDULING: load_balance
           JINA_ENCODER_DRIVER_BATCHING: 16
           JINA_WORKSPACE: workspace
