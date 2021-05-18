@@ -71,7 +71,7 @@ jobs:
       - method: delete_workspace
 
       - method: collect_stats
-        slack: false
+        slack: true
 
       - method: upload_to_s3
         directory: '_logs'

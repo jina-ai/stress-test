@@ -9,16 +9,20 @@ pods:
     polling: all
     shards: {{ JINA_SEGMENTER_SHARDS }}
     uses: segment.yml
+    scheduling: {{ JINA_SCHEDULING }}
     read_only: true
     host: {{ JINA_SEGMENTER_HOST }}
     port_expose: {{ JINA_SEGMENTER_PORT }}
+    timeout_ready: 100000
+    upload_files:
+      - segmenters.py
   - name: encoder
     polling: all
     scheduling: {{ JINA_SCHEDULING }}
     uses: encoder.yml
     shards: {{ JINA_ENCODER_SHARDS }}
     uses_after: chunk_merger.yml
-    timeout_ready: -1
+    timeout_ready: 100000
     read_only: true
     host: {{ JINA_ENCODER_HOST }}
     port_expose: {{ JINA_ENCODER_PORT }}
@@ -28,7 +32,7 @@ pods:
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
     polling: all
     uses_after: chunk_merger.yml
-    timeout_ready: -1
+    timeout_ready: 100000
     host: {{ JINA_VEC_INDEXER_HOST }}
     port_expose: {{ JINA_VEC_INDEXER_PORT }}
   - name: ranker
