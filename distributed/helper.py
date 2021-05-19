@@ -263,6 +263,6 @@ def terminate_test():
                   headers={'Accept': 'application/vnd.github.v3+json',
                            'Authorization': f'token {os.environ["GITHUB_TOKEN"]}'},
                   json={'event_type': 'terminate-stress-test',
-                        'client_payload': {'tfid:': os.environ["TFID"],
+                        'client_payload': {'tfid': os.environ["TFID"],
                                            'test-name': os.environ["STRESS_TEST_TEST_NAME"]}})
     logger.info(f'Terminating stress test response is {resp.status_code}')
