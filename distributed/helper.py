@@ -249,15 +249,20 @@ def update_instances_environment_vars(environment: Dict[str, str]):
 
 def terminate_test():
     if 'GITHUB_TOKEN' not in os.environ:
+        logger.warning('Not terminating stress test, no github token provided')
         return
     if 'TFID' not in os.environ:
+        logger.warning('Not terminating stress test, no tfid provided')
         return
     if 'STRESS_TEST_TEST_NAME' not in os.environ:
+        logger.warning('Not terminating stress test, no test name provided')
         return
 
-    requests.post('https://api.github.com/repos/jina-ai/jina-terraform/dispatches',
+    logger.info(f'Terminating stress test {os.environ["TFID"]} with type {os.environ["STRESS_TEST_TEST_NAME"]}')
+    resp = requests.post('https://api.github.com/repos/jina-ai/jina-terraform/dispatches',
                   headers={'Accept': 'application/vnd.github.v3+json',
                            'Authorization': f'token {os.environ["GITHUB_TOKEN"]}'},
                   json={'event_type': 'terminate-stress-test',
                         'client_payload': {'tfid:': os.environ["TFID"],
                                            'test-name': os.environ["STRESS_TEST_TEST_NAME"]}})
+    logger.info(f'Terminating stress test response is {resp.status_code}')
