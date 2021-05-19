@@ -1,3 +1,4 @@
+import atexit
 import time
 import yaml
 import copy
@@ -105,6 +106,7 @@ def main(config):
 
 
 if __name__ == '__main__':
+    atexit.register(helper.terminate_test)
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='config.yaml')
     args = parser.parse_args()
