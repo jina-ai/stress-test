@@ -7,7 +7,7 @@ jobs:
           JINA_GATEWAY_PORT_EXPOSE: 23456
           JINA_SEGMENTER_SHARDS: 6
           JINA_ENCODER_SHARDS: 6
-          JINA_VEC_INDEXER_SHARDS: 6
+          JINA_VEC_INDEXER_SHARDS: 1
           JINA_KV_INDEXER_SHARDS: 6
           JINA_RANKER_SHARDS: 6
           JINA_SCHEDULING: load_balance
@@ -62,7 +62,7 @@ jobs:
           kwargs:
             type: 'NumpyIndexer+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 5
+        num_clients: 1
         request_size: 10
         top_k: 15
 
