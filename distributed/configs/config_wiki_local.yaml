@@ -46,7 +46,7 @@ jobs:
         on_always:
           method: validate_texts
           kwargs:
-            type: 'NumpyIndexer+BinaryPb+TransformerTorch'
+            type: 'Annoy+BinaryPb+TransformerTorch'
         client: grpc
         num_clients: 5
         request_size: 30
