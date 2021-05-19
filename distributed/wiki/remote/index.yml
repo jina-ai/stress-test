@@ -27,7 +27,7 @@ pods:
   - name: vec_idx
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
-    uses: chunk_indexer.yml
+    uses: annoy_indexer.yml
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
     timeout_ready: 100000
     host: {{ JINA_VEC_INDEXER_HOST }}

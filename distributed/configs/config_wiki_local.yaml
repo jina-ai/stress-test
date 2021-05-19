@@ -14,6 +14,10 @@ jobs:
           JINA_ENCODER_DRIVER_BATCHING: 16
           JINA_WORKSPACE: workspace
           JINA_DISTANCE_REVERSE: false
+          JINA_ANNOY_NUM_TREES: 100
+          JINA_ANNOY_SEARCH_K: -1
+          JINA_ANNOY_IMAGE: 'docker://jinahub/pod.indexer.annoyindexer:0.0.18-1.2.0'
+          OMP_NUM_THREADS: 1
         files:
           - wiki/local/index.yml
           - wiki/local/query.yml
@@ -24,6 +28,7 @@ jobs:
           - wiki/chunk_merger.yml
           - wiki/doc.yml
           - wiki/ranker.yml
+          - wiki/annoy_indexer.yml
 
       - method: download_and_extract_from_web
         uri: https://s3.amazonaws.com/uploads-files/wiki_dump.gz
@@ -32,7 +37,7 @@ jobs:
         file: wiki/local/index.yml
       - sleep_time: 2
         method: index
-        execution_time: 5
+        execution_time: 100
         inputs:
           method: wikipedia_docs
           kwargs:
@@ -46,12 +51,12 @@ jobs:
         num_clients: 5
         request_size: 30
       - method: terminate_flow
-
-      - method: start_flow
+      - sleep_time: 2
+        method: start_flow
         file: wiki/local/query.yml
-      - sleep_time: 1
+      - sleep_time: 5
         method: query
-        execution_time: 5
+        execution_time: 50
         inputs:
           method: wikipedia_docs
           kwargs:
@@ -60,7 +65,7 @@ jobs:
         on_always:
           method: validate_texts
           kwargs:
-            type: 'NumpyIndexer+BinaryPb+TransformerTorch'
+            type: 'Annoy+BinaryPb+TransformerTorch'
         client: grpc
         num_clients: 1
         request_size: 10

@@ -17,7 +17,7 @@ SLACK_MESSAGE_JSON = 'configs/slack-message.json'
 tasks = ['index', 'search']
 types = ['Numpy+BinaryPb+ImageTorch', 'Annoy+BinaryPb+ImageTorch', 'Faiss+BinaryPb+ImageTorch',
          'Numpy+Redis+ImageTorch', 'Annoy+Redis+ImageTorch', 'Faiss+Redis+ImageTorch',
-         'NumpyIndexer+BinaryPb+TransformerTorch']
+         'NumpyIndexer+BinaryPb+TransformerTorch', 'Annoy+BinaryPb+TransformerTorch']
 clients = ['grpc', 'websocket']
 
 

@@ -28,7 +28,7 @@ pods:
     port_expose: {{ JINA_ENCODER_PORT }}
   - name: vec_idx
     scheduling: {{ JINA_SCHEDULING }}
-    uses: chunk_indexer.yml
+    uses: annoy_indexer.yml
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
     polling: all
     uses_after: chunk_merger.yml

@@ -1,0 +1,38 @@
+jtype: CompoundIndexer
+components:
+  - jtype: AnnoyIndexer
+    with:
+      index_filename: vec.gz
+      metric: euclidean
+      n_trees: {{ JINA_ANNOY_NUM_TREES }}
+      search_k: {{ JINA_ANNOY_SEARCH_K }}
+    metas:
+      name: vec_idx
+  - jtype: BinaryPbIndexer
+    with:
+      index_filename: chunk.gz
+    metas:
+      name: chunk_idx
+metas:
+  name: chunk_compound_indexer
+  workspace: ./workspace
+requests:
+  on:
+    IndexRequest:
+      - !VectorIndexDriver
+        with:
+          executor: vec_idx
+          traversal_paths: ['c']
+      - !KVIndexDriver
+        with:
+          executor: chunk_idx
+          traversal_paths: [ 'c' ]
+    SearchRequest:
+      - !VectorSearchDriver
+        with:
+          executor: vec_idx
+          traversal_paths: [ 'c' ]
+      - !KVSearchDriver
+        with:
+          executor: chunk_idx
+          traversal_paths: [ 'cm' ]
