@@ -245,3 +245,19 @@ def update_instances_environment_vars(environment: Dict[str, str]):
             host_env = yaml.safe_load(f)
             if 'instances' in host_env:
                 environment.update(host_env['instances'])
+
+
+def terminate_test():
+    if 'GITHUB_TOKEN' not in os.environ:
+        return
+    if 'TFID' not in os.environ:
+        return
+    if 'STRESS_TEST_TEST_NAME' not in os.environ:
+        return
+
+    requests.post('https://api.github.com/repos/jina-ai/jina-terraform/dispatches',
+                  headers={'Accept': 'application/vnd.github.v3+json',
+                           'Authorization': f'token {os.environ["GITHUB_TOKEN"]}'},
+                  json={'event_type': 'terminate-stress-test',
+                        'client_payload': {'tfid:': os.environ["TFID"],
+                                           'test-name': os.environ["STRESS_TEST_TEST_NAME"]}})

@@ -145,20 +145,4 @@ class StepItems:
                     f.write(resp.content)
                 shutil.unpack_archive(file_name, format=format)
 
-    @classmethod
-    @validate_arguments
-    def terminate_test(cls):
 
-        if 'GITHUB_TOKEN' not in os.environ:
-            raise ValueError('Can not terminate test, GITHUB_TOKEN not a enverionment variable')
-        if 'TFID' not in os.environ:
-            raise ValueError('Can not terminate test, TFID not a enverionment variable')
-        if 'STRESS_TEST_TEST_NAME' not in os.environ:
-            raise ValueError('Can not terminate test, STRESS_TEST_TEST_NAME not a enverionment variable')
-
-    requests.post('https://api.github.com/repos/jina-ai/jina-terraform/dispatches',
-                  headers={'Accept': 'application/vnd.github.v3+json',
-                           'Authorization': f'token {os.environ["GITHUB_TOKEN"]}'},
-                  json={'event_type': 'terminate-stress-test',
-                        'client_payload': {'tfid:': os.environ["TFID"],
-                                           'test-name': os.environ["STRESS_TEST_TEST_NAME"]}})
