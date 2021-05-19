@@ -80,3 +80,5 @@ jobs:
       - method: upload_to_s3
         directory: '_logs'
         bucket: 'e2e-distributed-stress-tests'
+
+      - method: terminate_test
