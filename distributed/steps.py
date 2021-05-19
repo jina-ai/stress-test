@@ -145,4 +145,3 @@ class StepItems:
                     f.write(resp.content)
                 shutil.unpack_archive(file_name, format=format)
 
-
