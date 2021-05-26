@@ -55,6 +55,20 @@ jobs:
         file: wiki/remote/query.yml
       - sleep_time: 40
         method: query
+        execution_time: 50
+        inputs:
+          method: wikipedia_docs
+          kwargs:
+            dataset_path: ./enwiki-latest-abstract.xml
+            num_docs: 50
+        on_always:
+          method: blank_cb
+        client: grpc
+        num_clients: 1
+        request_size: 10
+        top_k: 15
+      - sleep_time: 5
+        method: query
         execution_time: 240
         inputs:
           method: wikipedia_docs

@@ -60,9 +60,11 @@ def index(*,
           request_size: int = 100,
           execution_time: int = 10):
     logger.info(f'👍 Starting indexing for {execution_time} secs')
+    start = time.time()
     on_always_args.update({'client': client.value})
     _handle_clients(num_clients, 'index', client, execution_time, inputs,
                     inputs_args, request_size, on_always, on_always_args)
+    logger.info(f'👍 Completed indexing. It took {time.time() - start} secs')
 
 
 @validate_arguments
@@ -77,6 +79,8 @@ def query(*,
           execution_time: int = 10,
           top_k: int = 10):
     logger.info(f'👍 Starting querying for {execution_time} secs')
+    start = time.time()
     on_always_args.update({'top_k': top_k, 'client': client.value})
     _handle_clients(num_clients, 'search', client, execution_time, inputs,
                     inputs_args, request_size, on_always, on_always_args, top_k)
+    logger.info(f'👍 Completed querying. It took {time.time()-start} secs')

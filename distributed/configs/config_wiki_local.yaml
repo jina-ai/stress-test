@@ -63,11 +63,25 @@ jobs:
             dataset_path: ./enwiki-latest-abstract.xml
             num_docs: 10
         on_always:
+          method: blank_cb
+        client: grpc
+        num_clients: 1
+        request_size: 10
+        top_k: 15
+      - sleep_time: 5
+        method: query
+        execution_time: 50
+        inputs:
+          method: wikipedia_docs
+          kwargs:
+            dataset_path: ./enwiki-latest-abstract.xml
+            num_docs: 10
+        on_always:
           method: validate_texts
           kwargs:
             type: 'Annoy+BinaryPb+TransformerTorch'
         client: grpc
-        num_clients: 1
+        num_clients: 2
         request_size: 10
         top_k: 15
       - method: terminate_flow

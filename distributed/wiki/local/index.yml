@@ -10,27 +10,30 @@ pods:
     uses: segment.yml
     scheduling: {{ JINA_SCHEDULING }}
     read_only: true
+    timeout_ready: 100000
   - name: encoder
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
     uses: encoder.yml
     shards: {{ JINA_ENCODER_SHARDS }}
-    timeout_ready: 10000
+    timeout_ready: 100000
     read_only: true
   - name: vec_idx
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
     uses: annoy_indexer.yml
     shards: {{ JINA_VEC_INDEXER_SHARDS }}
-    timeout_ready: 10000
+    timeout_ready: 100000
   - name: doc_idx
     polling: any
     scheduling: {{ JINA_SCHEDULING }}
     uses: doc.yml
     shards: {{ JINA_KV_INDEXER_SHARDS }}
     needs: gateway
+    timeout_ready: 100000
   - name: join_all
     method: needs
     uses: _merge
     needs: [ doc_idx, vec_idx ]
     read_only: true
+    timeout_ready: 100000

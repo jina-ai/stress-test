@@ -188,8 +188,6 @@ def validate_images(resp: Request, top_k: int = 10, **kwargs):
             for m in d.matches:
                 if 'timestamp' not in m.tags.keys():
                     logger.error(f'timestamp not in tags: {m.tags}')
-                if 'filename' not in m.tags.keys():
-                    logger.error(f'filename not in tags: {m.tags}')
                 # to test that the data from the KV store is retrieved
                 if 'image ' not in m.tags['filename']:
                     logger.error(f'"image" not in m.tags["filename"]: {m.tags["filename"]}')
@@ -216,11 +214,16 @@ def validate_texts(resp: Request, top_k: int = 10, **kwargs):
                 if 'timestamp' not in m.tags.keys():
                     logger.error(f'timestamp not in tags: {m.tags}')
                 # to test that the data from the KV store is retrieved
-                if 'filename' not in m.tags.keys():
-                    logger.error(f'did not find "filename" in tags: {m.tags}')
+                if 'filename' not in m.tags.keys() and 'title' not in m.tags.keys():
+                    logger.error(f'did not find "filename/title" in tags: {m.tags}')
     except Exception as e:
         logger.exception(f'Got an exception during `validate_images`. Continuing (not raising)')
 
+
+# for some indexer, we need some warm up phase
+# this callback is used to skip logging as we dont want to trace warmup
+def blank_cb(*args, **kwargs):
+    pass
 
 @validate_arguments
 def update_environment_vars(files: List[FilePath], environment: Dict[str, str]):

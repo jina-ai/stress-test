@@ -1,3 +1,4 @@
+import datetime
 import os
 import uuid
 import glob
@@ -28,8 +29,9 @@ def collect_and_push(slack=False):
     table.add_column(
         'Experiments',
         ['Task', 'VecIndexer', 'KVIndexer', 'Encoder', 'Client', '#Clients',
-         'Total Time (hrs)', '#Docs', '# Docs per sec (C2C)', '# Docs per sec (G2G)',
-         'Time spent (VecIndexer)', 'Time spent (KVIndexer)', 'Time spent (Encoder)']
+         'Total Time (C2C, wall clock time)', 'Total Time (processing time)', '#Docs', '# Docs per sec (C2C)', '# Docs per sec (G2G)',
+         'Time spent (VecIndexer)', 'Time spent (KVIndexer)', 'Time spent (Encoder)',
+         'Time spent (Segmenter)', 'Time spent (join_all)', 'Time spent (ranker)']
     )
 
     for stats_file in glob.glob(f'{LOGS_DIR}/p2p*.log'):
@@ -42,12 +44,13 @@ def collect_and_push(slack=False):
         temp_df = stats_df[(stats_df.task == _task) & (stats_df.type == _type) & (stats_df.client == _client)]
 
         _num_clients = len(temp_df.process_id.unique())
-        logger.info(f'Configuration: task: {_task}, type: {_type}, client: {_client}, num_clients: {_num_clients}')
+
 
         _pods = set()
         _total_time_spent_dict = {}
 
         if _num_clients > 0:
+            logger.info(f'Configuration: task: {_task}, type: {_type}, client: {_client}, num_clients: {_num_clients}')
             for _pod_shard in temp_df.columns[temp_df.columns.str.contains('ZEDRuntime')].str.replace('/ZEDRuntime', '').str.split('/'):
                 # TODO: we can get total time at each shard
                 try:
@@ -85,17 +88,24 @@ def collect_and_push(slack=False):
                 _vec_indexer, _kv_indexer, _encoder = ['unknown'] * 3
 
             experiment_idx += 1
+
+            def seconds(x): return (datetime.datetime.strptime(x[1], "%H:%M:%S") - datetime.datetime(1900, 1, 1)).total_seconds()
+
+            total_time_spent = sum(map(seconds, filter(lambda item: True if item[0] != 'client' else False, _total_time_spent_dict.items())))
+            total_time_spent_str = str(timedelta(seconds=total_time_spent))
+
             # TODO: Below names are hardcoded (not picked from actual pods). Flow yaml with different name would break this.
             table.add_column(
                 f'Experiment {experiment_idx}',
                 [_task, _vec_indexer, _kv_indexer, _encoder, _client, _num_clients,
-                 _total_time_spent_dict['client'],  _total_jina_docs,
+                 _total_time_spent_dict['client'],  total_time_spent_str, _total_jina_docs,
                  f'{_avg_jina_docs_per_sec_c2c:.1f}', f'{_avg_jina_docs_per_sec_g2g:.1f}',
                  _total_time_spent_dict['vec_idx'],  _total_time_spent_dict['doc_idx'],
-                 _total_time_spent_dict['encoder']]
+                 _total_time_spent_dict['encoder'],
+                 _total_time_spent_dict['segmenter'] if 'segmenter' in _total_time_spent_dict else 'n/a',
+                 _total_time_spent_dict['join_all'] if 'join_all' in _total_time_spent_dict else 'n/a',
+                 _total_time_spent_dict['ranker'] if 'ranker' in _total_time_spent_dict else 'n/a']
             )
-        else:
-            logger.warning(f'Current config not triggered')
 
     with open(f'{LOGS_DIR}/stats.txt', 'w') as f:
         f.write(str(table))
