@@ -1,4 +1,4 @@
-jina
+git+https://github.com/jina-ai/jina.git@v1.2.0
 boto3
 pyyaml
 click
