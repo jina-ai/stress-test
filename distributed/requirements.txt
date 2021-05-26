@@ -1,4 +1,5 @@
-jina[http]
+git+https://github.com/jina-ai/jina.git@v1.2.0#egg=jina[http]
+git+https://github.com/jina-ai/cloud-helper.git#egg=jinacld_tools
 boto3
 pandas
 pyyaml
@@ -7,4 +8,3 @@ pydantic
 requests
 Pillow
 prettytable
-git+git://github.com/jina-ai/cloud-helper.git#egg=jinacld_tools
