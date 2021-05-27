@@ -159,6 +159,7 @@ def _log_time_per_pod(routes: List,
         # all times logged in ms
         return (datetime.strptime(end, _time_fmt) - datetime.strptime(start, _time_fmt)).total_seconds() * 1000
 
+    logger.info(f'Received these routes: {routes}')
     time_per_pod = {i['pod']: f'{_time_diff_ms(i["start_time"], i["end_time"]):.0f}' for i in routes if 'end_time' in i}
     p2p_metrics_logger.info(json.dumps(
         {'task': task,
