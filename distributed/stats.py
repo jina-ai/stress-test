@@ -29,7 +29,7 @@ def collect_and_push(slack=False):
     table.add_column(
         'Experiments',
         ['Task', 'VecIndexer', 'KVIndexer', 'Encoder', 'Client', '#Clients',
-         'Total Time (C2C, wall clock time)', 'Total Time (processing time)', '#Docs', '# Docs per sec (C2C)', '# Docs per sec (G2G)',
+         'Total Time (C2C, wall clock time)', 'Total Time (processing time)', '#Docs', '# Docs per sec (C2C)',
          'Time spent (VecIndexer)', 'Time spent (KVIndexer)', 'Time spent (Encoder)',
          'Time spent (Segmenter)', 'Time spent (join_all)', 'Time spent (ranker)']
     )
@@ -76,7 +76,6 @@ def collect_and_push(slack=False):
             _total_time_spent_dict['client'] = total_time_spent_str('client_roundtrip')
             _total_jina_docs = temp_df.num_jina_docs.sum()
             _avg_jina_docs_per_sec_c2c = _num_clients * _total_jina_docs / (temp_df['client_roundtrip'].sum() / 1000)
-            _avg_jina_docs_per_sec_g2g = _num_clients * _total_jina_docs / (temp_df['gateway'].sum() / 1000)
 
             logger.info(f'Total Client Roundtrip Time: {_total_time_spent_dict["client"]} hours')
             logger.info(f'Total Number of Jina Documents: {_total_jina_docs}')
@@ -99,9 +98,8 @@ def collect_and_push(slack=False):
                 f'Experiment {experiment_idx}',
                 [_task, _vec_indexer, _kv_indexer, _encoder, _client, _num_clients,
                  _total_time_spent_dict['client'],  total_time_spent_str, _total_jina_docs,
-                 f'{_avg_jina_docs_per_sec_c2c:.1f}', f'{_avg_jina_docs_per_sec_g2g:.1f}',
-                 _total_time_spent_dict['vec_idx'],  _total_time_spent_dict['doc_idx'],
-                 _total_time_spent_dict['encoder'],
+                 f'{_avg_jina_docs_per_sec_c2c:.1f}', _total_time_spent_dict['vec_idx'],
+                 _total_time_spent_dict['doc_idx'], _total_time_spent_dict['encoder'],
                  _total_time_spent_dict['segmenter'] if 'segmenter' in _total_time_spent_dict else 'n/a',
                  _total_time_spent_dict['join_all'] if 'join_all' in _total_time_spent_dict else 'n/a',
                  _total_time_spent_dict['ranker'] if 'ranker' in _total_time_spent_dict else 'n/a']
