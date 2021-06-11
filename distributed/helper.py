@@ -16,7 +16,8 @@ import requests
 import yaml
 import chevron
 import numpy as np
-from jina import Document, Request
+from jina import Document
+from jina.types.request import Request
 from jinacld_tools.aws.services.s3 import S3Bucket
 from pydantic import FilePath, validate_arguments
 
