@@ -141,3 +141,7 @@ _logs/
 _rendered/
 *instances.yaml
 nohup.out
+
+# cache
+enwiki-latest-abstract.xml
+wiki_dump.gz
