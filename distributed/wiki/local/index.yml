@@ -1,21 +1,22 @@
 jtype: Flow
 version: '1'
 with:
-  workspace: $HW_WORKDIR
+  workspace: $JINA_WORKDIR
   py_modules:
     - executors.py
 pods:
   - name: segmenter
-    # shards: {{ JINA_SEGMENTER_SHARDS }}
-    # scheduling: {{ JINA_SCHEDULING }}
-    read_only: true
-    timeout_ready: 100000
+    uses: 
+      jtype: Segmenter
   - name: encoder
-    # scheduling: {{ JINA_SCHEDULING }}
-    # shards: {{ JINA_ENCODER_SHARDS }}
-    timeout_ready: 100000
-    read_only: true
+    uses:
+      jtype: TextEncoder
   - name: vec_idx
-    # scheduling: {{ JINA_SCHEDULING }}
-    # shards: {{ JINA_VEC_INDEXER_SHARDS }}
-    timeout_ready: 100000
+    uses:
+      jtype: AnnoyIndexer
+  - name: doc_idx
+    uses:
+      jtype: KeyValueIndexer
+    needs: segmenter
+  - name: join_all
+    needs: [vec_idx, doc_idx]

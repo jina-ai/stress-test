@@ -1,9 +1,15 @@
 import os
+import json
+import errno
+import torch
+import numpy as np
+from pathlib import Path
+from annoy import AnnoyIndex
 from typing import Dict, Optional
 
-import torch
 from transformers import AutoModel, AutoTokenizer
 from jina import Executor, DocumentArray, requests, Document
+from jina.types.arrays.memmap import DocumentArrayMemmap
 
 
 class Segmenter(Executor):
@@ -82,7 +88,13 @@ class TextEncoder(Executor):
     @requests
     def encode(self, docs: 'DocumentArray', *args, **kwargs):
 
-        texts = docs.get_attributes('text')
+        chunks = DocumentArray(
+            list(
+                filter(lambda d: d.mime_type == 'text/plain', docs.traverse_flat(['c']))
+            )
+        )
+
+        texts = chunks.get_attributes('text')
 
         with torch.no_grad():
 
@@ -107,8 +119,10 @@ class TextEncoder(Executor):
             hidden_states = outputs.hidden_states
 
             embeds = self._compute_embedding(hidden_states, input_tokens)
-            for doc, embed in zip(docs, embeds):
+            for doc, embed in zip(chunks, embeds):
                 doc.embedding = embed
+
+        return chunks
 
 
 class AnnoyIndexer(Executor):
@@ -121,7 +135,7 @@ class AnnoyIndexer(Executor):
     def __init__(
         self,
         top_k: int = 10,
-        num_dim: int = 512,
+        num_dim: int = 768,
         num_trees: int = 10,
         metric: str = 'angular',
         **kwargs,
@@ -187,47 +201,24 @@ class AnnoyIndexer(Executor):
                 json.dump(self.id_docid_map, f)
 
 
-class DocIndexer(Executor):
-    @requests
-    def index(self, docs: DocumentArray, **kwargs):
-        pass
-
-
-import numpy as np
-from jina.helper import deprecated_alias
-
-
-class SimpleAggregateRanker(Executor):
-    """
-    :class:`SimpleAggregateRanker` aggregates the score
-    of the matched doc from the matched chunks.
-    For each matched doc, the score is aggregated
-    from all the matched chunks belonging to that doc.
-
-    :param: aggregate_function: defines the used aggregate function
-        and can be one of: [min, max, mean, median, sum, prod]
-    :param: inverse_score: plus-one inverse by 1/(1+score)
-    :raises:
-        ValueError: If `aggregate_function` is not any of the expected types
-    :param args:  Additional positional arguments
-    :param kwargs: Additional keyword arguments
-    """
-
-    AGGREGATE_FUNCTIONS = ['min', 'max', 'mean', 'median', 'sum', 'prod']
-
-    def __init__(
-        self, aggregate_function: str, inverse_score: bool = False, *args, **kwargs
-    ):
-        """Set constructor"""
+class KeyValueIndexer(Executor):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.inverse_score = inverse_score
-        if aggregate_function in self.AGGREGATE_FUNCTIONS:
-            self.np_aggregate_function = getattr(np, aggregate_function)
-        else:
-            raise ValueError(
-                f'The aggregate function "{aggregate_function}" is not in "{self.AGGREGATE_FUNCTIONS}".'
-            )
+        self._docs = DocumentArrayMemmap(self.workspace + '/kv-idx')
+
+    @property
+    def save_path(self):
+        if not os.path.exists(self.workspace):
+            os.makedirs(self.workspace)
+        return os.path.join(self.workspace, 'kv.json')
+
+    @requests(on='/index')
+    def index(self, docs: DocumentArray, **kwargs):
+        self._docs.extend(docs)
 
     @requests(on='/search')
-    def score(self, docs, **kwargs):
-        pass
+    def query(self, docs: DocumentArray, **kwargs):
+        for doc in docs:
+            for match in doc.matches:
+                extracted_doc = self._docs[match.parent_id]
+                match.update(extracted_doc)

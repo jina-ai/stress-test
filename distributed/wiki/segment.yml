@@ -1,5 +1,0 @@
-jtype: TextSegmenter
-metas:
-  name: seg-text
-  py_modules:
-    - segmenters.py
