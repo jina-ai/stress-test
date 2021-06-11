@@ -1,0 +1,13 @@
+jtype: Flow
+version: '1'
+pods:
+  - name: segmenter
+    
+  - name: encoder
+    
+  - name: vec_idx
+    
+  - name: ranker
+    
+  - name: doc_idx
+    
