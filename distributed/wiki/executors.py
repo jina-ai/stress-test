@@ -1,40 +1,42 @@
 import os
-from typing import Dict, Optional, List, Iterable, Union, Tuple
+from typing import Dict, Optional
 
-import numpy as np
 import torch
-import torchvision.models as models
 from transformers import AutoModel, AutoTokenizer
-
 from jina import Executor, DocumentArray, requests, Document
-from jina.types.arrays.memmap import DocumentArrayMemmap
+
 
 class Segmenter(Executor):
-
     @requests
     def segment(self, docs: DocumentArray, **kwargs):
         for doc in docs:
-            text = doc.text
+            joined_tokens = []
             chunks = DocumentArray()
-            joined_words = []
-            for word in text.split(' '):
-                joined_words.append(word)
-                if len(joined_words) == 2:
-                    self._append_word(chunks, joined_words)
-                    joined_words = []
-            if len(joined_words) > 0:
-                self._append_word(chunks, joined_words)
+            for token in doc.text.split(' '):
+                joined_tokens.append(token)
+                if len(joined_tokens) == 2:
+                    chunks.append(
+                        Document(
+                            weight=1.0,
+                            mime_type='text/plain',
+                            text=' '.join([word for word in joined_tokens]),
+                        )
+                    )
+                    joined_tokens = []
+            if len(joined_tokens) > 0:
+                chunks.append(
+                    Document(
+                        weight=1.0,
+                        mime_type='text/plain',
+                        text=' '.join([word for word in joined_tokens]),
+                    )
+                )
 
-            doc.text = chunks
-
-    def _append_word(self, chunks, joined_words):
-        chunk = Document(weight=1.0, mime_type='text/plain', text=' '.join([word for word in joined_words]))
-        chunks.append(chunk)
-        
+            doc.chunks = chunks
 
 
 class TextEncoder(Executor):
-    """Transformer executor class """
+    """Transformer executor class"""
 
     def __init__(
         self,
@@ -107,6 +109,7 @@ class TextEncoder(Executor):
             embeds = self._compute_embedding(hidden_states, input_tokens)
             for doc, embed in zip(docs, embeds):
                 doc.embedding = embed
+
 
 class AnnoyIndexer(Executor):
 
@@ -183,8 +186,8 @@ class AnnoyIndexer(Executor):
             with open(self.index_map_path, 'w') as f:
                 json.dump(self.id_docid_map, f)
 
-class DocIndexer(Executor):
 
+class DocIndexer(Executor):
     @requests
     def index(self, docs: DocumentArray, **kwargs):
         pass
@@ -212,15 +215,19 @@ class SimpleAggregateRanker(Executor):
 
     AGGREGATE_FUNCTIONS = ['min', 'max', 'mean', 'median', 'sum', 'prod']
 
-    def __init__(self, aggregate_function: str, inverse_score: bool = False, *args, **kwargs):
+    def __init__(
+        self, aggregate_function: str, inverse_score: bool = False, *args, **kwargs
+    ):
         """Set constructor"""
         super().__init__(*args, **kwargs)
         self.inverse_score = inverse_score
         if aggregate_function in self.AGGREGATE_FUNCTIONS:
             self.np_aggregate_function = getattr(np, aggregate_function)
         else:
-            raise ValueError(f'The aggregate function "{aggregate_function}" is not in "{self.AGGREGATE_FUNCTIONS}".')
-    
+            raise ValueError(
+                f'The aggregate function "{aggregate_function}" is not in "{self.AGGREGATE_FUNCTIONS}".'
+            )
+
     @requests(on='/search')
     def score(self, docs, **kwargs):
         pass
