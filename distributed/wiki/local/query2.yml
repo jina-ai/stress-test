@@ -1,13 +1,23 @@
 jtype: Flow
 version: '1'
+with:
+  workspace: $JINA_WORKDIR
+  py_modules:
+    - wiki_executors.py
 pods:
   - name: segmenter
-    
+    uses: 
+      jtype: Segmenter
   - name: encoder
-    
+    uses:
+      jtype: TextEncoder
   - name: vec_idx
-    
-  - name: ranker
-    
+    uses:
+      jtype: AnnoyIndexer
   - name: doc_idx
+    uses:
+      jtype: KeyValueIndexer
+  - name: ranker
+    uses:
+      jtype: AggregateRanker
     

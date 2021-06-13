@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from pathlib import Path
 from annoy import AnnoyIndex
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from transformers import AutoModel, AutoTokenizer
 from jina import Executor, DocumentArray, requests, Document
@@ -222,3 +222,37 @@ class KeyValueIndexer(Executor):
             for match in doc.matches:
                 extracted_doc = self._docs[match.parent_id]
                 match.update(extracted_doc)
+
+
+class AggregateRanker(Executor):
+    @requests(on='/search')
+    def rank(self, docs: DocumentArray, parameters: Dict, **kwargs) -> 'DocumentArray':
+        """
+        :param docs: the doc which gets bubbled up matches
+        :param kwargs: not used (kept to maintain interface)
+        """
+        docs.sort(key=lambda item: item.score.value, reverse=True)
+
+        # # result_da = DocumentArray()  # length: 1 as every time there is only one query
+        # # for d_mod1, d_mod2 in zip(*docs_matrix):
+
+        #     final_matches = {}  # type: Dict[str, Document]
+
+        #     for m in d_mod1.matches:
+        #         m.score.value *= d_mod1.weight
+        #         final_matches[m.parent_id] = Document(m, copy=True)
+
+        #     for m in d_mod2.matches:
+        #         if m.parent_id in final_matches:
+        #             final_matches[m.parent_id].score.value += (
+        #                 m.score.value * d_mod2.weight
+        #             )
+        #         else:
+        #             m.score.value *= d_mod2.weight
+        #             final_matches[m.parent_id] = Document(m, copy=True)
+
+        #     da = DocumentArray(list(final_matches.values()))
+        #     da.sort(key=lambda ma: ma.score.value, reverse=True)
+        #     d = Document(matches=da[: int(parameters['top_k'])])
+        #     result_da.append(d)
+        # return result_da
