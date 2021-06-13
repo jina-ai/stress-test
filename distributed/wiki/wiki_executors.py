@@ -190,7 +190,7 @@ class AnnoyIndexer(Executor):
             for idx, dist in zip(indices, dists):
                 match = Document(id=self.id_docid_map[str(idx)])
                 match.score.value = 1 / (1 + dist)
-                doc.matches.append(match)
+                doc.matches.append(match)  # chunk level matches
 
     def close(self):
         if self.request_type == '/index':
@@ -218,41 +218,24 @@ class KeyValueIndexer(Executor):
 
     @requests(on='/search')
     def query(self, docs: DocumentArray, **kwargs):
-        for doc in docs:
-            for match in doc.matches:
-                extracted_doc = self._docs[match.parent_id]
-                match.update(extracted_doc)
+        indexed_docs = DocumentArray(self._docs)
+        parent_child_map = {}
+        for doc in indexed_docs:
+            parent_child_map[doc.id] = [item.id for item in doc.chunks]
+        for doc in docs:  # chunks of matches
+            for match in doc.matches:  # chunk level matches
+                for k, v in parent_child_map.items():
+                    if match.id in v:
+                        extracted_doc = self._docs[k]
+                        match.update(extracted_doc)
 
 
 class AggregateRanker(Executor):
     @requests(on='/search')
-    def rank(self, docs: DocumentArray, parameters: Dict, **kwargs) -> 'DocumentArray':
+    def rank(self, docs: DocumentArray, **kwargs) -> 'DocumentArray':
         """
         :param docs: the doc which gets bubbled up matches
         :param kwargs: not used (kept to maintain interface)
         """
+        # TODO NEED TO TAKE AVERAGE ON CHUNKS
         docs.sort(key=lambda item: item.score.value, reverse=True)
-
-        # # result_da = DocumentArray()  # length: 1 as every time there is only one query
-        # # for d_mod1, d_mod2 in zip(*docs_matrix):
-
-        #     final_matches = {}  # type: Dict[str, Document]
-
-        #     for m in d_mod1.matches:
-        #         m.score.value *= d_mod1.weight
-        #         final_matches[m.parent_id] = Document(m, copy=True)
-
-        #     for m in d_mod2.matches:
-        #         if m.parent_id in final_matches:
-        #             final_matches[m.parent_id].score.value += (
-        #                 m.score.value * d_mod2.weight
-        #             )
-        #         else:
-        #             m.score.value *= d_mod2.weight
-        #             final_matches[m.parent_id] = Document(m, copy=True)
-
-        #     da = DocumentArray(list(final_matches.values()))
-        #     da.sort(key=lambda ma: ma.score.value, reverse=True)
-        #     d = Document(matches=da[: int(parameters['top_k'])])
-        #     result_da.append(d)
-        # return result_da
