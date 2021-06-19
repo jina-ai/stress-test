@@ -189,7 +189,7 @@ class AnnoyIndexer(Executor):
             )
             for idx, dist in zip(indices, dists):
                 match = Document(id=self.id_docid_map[str(idx)])
-                match.score.value = 1 / (1 + dist)
+                match.scores['cosine'] = 1 / (1 + dist)
                 doc.matches.append(match)  # chunk level matches
 
     def close(self):
@@ -206,28 +206,29 @@ class KeyValueIndexer(Executor):
         super().__init__(*args, **kwargs)
         self._docs = DocumentArrayMemmap(self.workspace + '/kv-idx')
 
-    @property
-    def save_path(self):
-        if not os.path.exists(self.workspace):
-            os.makedirs(self.workspace)
-        return os.path.join(self.workspace, 'kv.json')
-
     @requests(on='/index')
     def index(self, docs: DocumentArray, **kwargs):
         self._docs.extend(docs)
 
     @requests(on='/search')
     def query(self, docs: DocumentArray, **kwargs):
-        indexed_docs = DocumentArray(self._docs)
-        parent_child_map = {}
-        for doc in indexed_docs:
-            parent_child_map[doc.id] = [item.id for item in doc.chunks]
-        for doc in docs:  # chunks of matches
-            for match in doc.matches:  # chunk level matches
-                for k, v in parent_child_map.items():
-                    if match.id in v:
-                        extracted_doc = self._docs[k]
-                        match.update(extracted_doc)
+        # docs are the segmented chunks of query document, bubble up docs to root docs and store in da, return da.
+        da = DocumentArray()
+        for doc in docs:
+            current_root = self._docs[
+                doc.parent_id
+            ]  # find the root doc based on current chunk
+            for match in doc.matches:
+                for d in self._docs:
+                    if match.id in [chunk.id for chunk in d.chunks]:
+                        match.parent_id = d.id
+                        match.update(d, fields=['text'])
+            if current_root.id not in [item.id for item in da]:
+                current_root.matches = doc.matches
+                da.append(current_root)
+            else:
+                current_root.matches.extend(doc.matches)
+        return da
 
 
 class AggregateRanker(Executor):
@@ -237,5 +238,16 @@ class AggregateRanker(Executor):
         :param docs: the doc which gets bubbled up matches
         :param kwargs: not used (kept to maintain interface)
         """
-        # TODO NEED TO TAKE AVERAGE ON CHUNKS
-        docs.sort(key=lambda item: item.score.value, reverse=True)
+        for doc in docs:
+            da = DocumentArray()
+            for match in doc.matches:
+                if match.parent_id in [d.id for d in da]:
+                    da[match.parent_id].scores['relevance'].value += match.scores[
+                        'cosine'
+                    ].value
+                else:
+                    d = Document(id=match.parent_id)
+                    d.text = match.text
+                    d.scores['relevance'] = match.scores['cosine'].value
+                    da.append(d)
+            doc.matches = da
