@@ -1,7 +1,7 @@
 from jina import Flow, Document, DocumentArray
 
 f = Flow.load_config(
-    '/Users/bo/Documents/work/stress-test/distributed/wiki/local/index.yml'
+    './local/index.yml'
 )
 
 d1 = Document(id=1, text='foo1 is foo fool full fu')
@@ -18,6 +18,6 @@ with f:
     f.index(inputs=DocumentArray([d1, d2, d3]))
 
 with Flow.load_config(
-    '/Users/bo/Documents/work/stress-test/distributed/wiki/local/query.yml'
+    './local/query.yml'
 ) as f:
     f.search(inputs=d2, on_done=print_matches)
