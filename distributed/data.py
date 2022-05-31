@@ -5,7 +5,8 @@ from multiprocessing import Pool
 from typing import Dict, Callable
 
 from jina.parsers import set_client_cli_parser
-from jina.clients import Client, WebSocketClient
+from jina.clients import Client
+from jina.clients.websocket import WebSocketClient
 from pydantic import validate_arguments
 
 from logger import logger
